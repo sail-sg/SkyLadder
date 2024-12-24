@@ -62,8 +62,19 @@ class GPT(nn.Module):
             self.mask_cache = None
 
     def forward(
-        self, idx: torch.Tensor, max_seq_length: Optional[int] = None, input_pos: Optional[torch.Tensor] = None
+        self, idx: torch.Tensor, fragment_lens = None, fragment_nums = None, max_seq_length: Optional[int] = None, input_pos: Optional[torch.Tensor] = None, force_use_masking=False, window_size: Optional[int] = None
     ) -> torch.Tensor:
+        if force_use_masking or (self.config.intradoc_mask and self.training):
+            real_fragment_lens = [torch.tensor([0], dtype=torch.int32, device=fragment_lens.device)]
+            for padded_fragment_lens, cur_fragment_num in zip(fragment_lens, fragment_nums):
+                real_fragment_lens.append(padded_fragment_lens[:cur_fragment_num])
+            real_fragment_lens = torch.cat(real_fragment_lens)
+            max_seqlen = real_fragment_lens.max().item()
+            cu_seqlens = torch.cumsum(real_fragment_lens, 0, dtype=torch.int32)
+            # print(f"max_seqlen shape: {max_seqlen}, cu_seqlens shape: {cu_seqlens.shape}")
+        else:
+            max_seqlen, cu_seqlens = None, None
+
         B, T = idx.size()
         use_kv_cache = input_pos is not None
 
@@ -99,15 +110,16 @@ class GPT(nn.Module):
 
         # forward the model itself
         x = self.transformer.wte(idx)  # token embeddings of shape (b, t, n_embd)
-            
+
         if not use_kv_cache:
             for block in self.transformer.h:
-                x, *_ = block(x, (cos, sin), max_seq_length)
+                assert (self.training and (cu_seqlens is not None or not self.config.intradoc_mask)) or not self.training, "cu_seqlens must be provided for intradoc mask[0]"
+                x, *_ = block(x, (cos, sin), max_seq_length, cuseq_lens=cu_seqlens, max_seqlen=max_seqlen, force_use_masking=force_use_masking, window_size=window_size)
         else:
             self.kv_caches = self.kv_caches or self.build_kv_caches(x, max_seq_length, cos.size(-1) * 2)
             for i, block in enumerate(self.transformer.h):
-                x, self.kv_caches[i] = block(x, (cos, sin), max_seq_length, mask, input_pos, self.kv_caches[i])
-
+                assert (self.training and (cu_seqlens is not None or not self.config.intradoc_mask)) or not self.training, "cu_seqlens must be provided for intradoc mask[0]"
+                x, self.kv_caches[i] = block(x, (cos, sin), max_seq_length, mask, input_pos, self.kv_caches[i], cuseq_lens=cu_seqlens, max_seqlen=max_seqlen, force_use_masking=force_use_masking, window_size=window_size)
         x = self.transformer.ln_f(x)
 
         return self.lm_head(x)  # (b, t, vocab_size)
@@ -117,13 +129,39 @@ class GPT(nn.Module):
         return cls(Config.from_name(name, **kwargs))
 
     def build_rope_cache(self, idx: torch.Tensor) -> RoPECache:
-        return build_rope_cache(
-            seq_len=self.config.block_size,
-            n_elem=int(self.config.rotary_percentage * self.config.head_size),
-            dtype=torch.bfloat16,
-            device=idx.device,
-            condense_ratio=self.config.condense_ratio,
-        )
+        print("Building rope cache, base: ", self.config.rope_base)
+        if 'rerope' not in self.config.intradoc_mask:
+            return build_rope_cache(
+                seq_len=self.config.block_size,
+                n_elem=int(self.config.rotary_percentage * self.config.head_size),
+                dtype=torch.bfloat16,
+                device=idx.device,
+                condense_ratio=self.config.condense_ratio,
+                base=self.config.rope_base,
+            )
+        else:
+            if self.config.intradoc_mask == 'fix2rerope':
+                rerope_len = 2048
+            elif self.config.intradoc_mask == 'fix1rerope':
+                rerope_len = 1024
+            else:
+                raise NotImplementedError("Only fix2rerope and fix1rerope are supported")
+
+            print("Building rope cache with {} length".format(rerope_len), "because of intradoc_mask: ", self.config.intradoc_mask)
+            cos, sin = build_rope_cache(
+                seq_len=rerope_len,
+                n_elem=int(self.config.rotary_percentage * self.config.head_size),
+                dtype=torch.bfloat16,
+                device=idx.device,
+                condense_ratio=self.config.condense_ratio,
+                base=self.config.rope_base,)
+            print("Original cos shape: ", cos.shape, "Original sin shape: ", sin.shape)
+            factor = int(self.config.block_size // rerope_len)
+            print("Factor: ", factor)
+            sin = sin.repeat(factor,1)
+            cos = cos.repeat(factor,1)
+            print("New cos shape: ", cos.shape, "New sin shape: ", sin.shape)
+            return cos, sin
 
     def build_mask_cache(self, idx: torch.Tensor) -> torch.Tensor:
         ones = torch.ones((self.config.block_size, self.config.block_size), device=idx.device, dtype=torch.bool)
@@ -164,10 +202,14 @@ class Block(nn.Module):
         mask: Optional[torch.Tensor] = None,
         input_pos: Optional[torch.Tensor] = None,
         kv_cache: Optional[KVCache] = None,
+        cuseq_lens: Optional[torch.Tensor] = None,
+        max_seqlen: Optional[int] = None,
+        force_use_masking=False,
+        window_size: Optional[int] = None
     ) -> Tuple[torch.Tensor, Optional[KVCache]]:
 
         n_1 = self.norm_1(x)
-        h, new_kv_cache = self.attn(n_1, rope, max_seq_length, mask, input_pos, kv_cache)
+        h, new_kv_cache = self.attn(n_1, rope, max_seq_length, mask, input_pos, kv_cache, cuseq_lens=cuseq_lens, max_seqlen=max_seqlen, force_use_masking=force_use_masking, window_size=window_size)
         if self.config.parallel_residual:
             n_2 = n_1 if self.config.shared_attention_norm else self.norm_2(x)
             x = x + h + self.mlp(n_2)
@@ -177,7 +219,7 @@ class Block(nn.Module):
                     "No checkpoint amongst the ones we support uses this configuration"
                     " (non-parallel residual and shared attention norm)."
                 )
-            
+
             x = x + h
             x = x + self.mlp(self.norm_2(x))
         return x, new_kv_cache
@@ -193,6 +235,10 @@ class CausalSelfAttention(nn.Module):
         self.proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
 
         self.config = config
+        self._use_pos_emb = not (config.positional_embedding == "no")
+        if not self._use_pos_emb:
+            print("Warning: not using positional embeddings, got config.positional_embedding == 'no'")
+        self._mask_attn = config.intradoc_mask
 
     def forward(
         self,
@@ -202,6 +248,10 @@ class CausalSelfAttention(nn.Module):
         mask: Optional[torch.Tensor] = None,
         input_pos: Optional[torch.Tensor] = None,
         kv_cache: Optional[KVCache] = None,
+        cuseq_lens: Optional[torch.Tensor] = None,
+        max_seqlen: Optional[int] = None,
+        force_use_masking=False,
+        window_size: Optional[int] = None
     ) -> Tuple[torch.Tensor, Optional[KVCache]]:
         B, T, C = x.size()  # batch size, sequence length, embedding dimensionality (n_embd)
 
@@ -224,18 +274,18 @@ class CausalSelfAttention(nn.Module):
         #     v = v.expand(B, self.config.n_query_groups, q_per_kv, T, self.config.head_size)
 
         q = q.reshape(B,  T, -1, self.config.head_size)  # (B, T, nh_q, hs)
-        k = k.reshape(B,  T, -1, self.config.head_size)  
-        v = v.reshape(B,  T, -1, self.config.head_size)  
+        k = k.reshape(B,  T, -1, self.config.head_size)
+        v = v.reshape(B,  T, -1, self.config.head_size)
 
         cos, sin = rope
 
         # apply rope in fp32 significanly stabalize training
         # fused rope expect (batch_size, seqlen, nheads, headdim)
-        q = apply_rotary_emb_func(q, cos, sin, False, True)
-        k = apply_rotary_emb_func(k, cos, sin, False, True)
-        
+        if self._use_pos_emb:
+            q = apply_rotary_emb_func(q, cos, sin, False, True)
+            k = apply_rotary_emb_func(k, cos, sin, False, True)
         # n_elem = int(self.config.rotary_percentage * self.config.head_size)
-    
+
         # q_roped = apply_rope(q[..., :n_elem], cos.repeat(1,2), sin.repeat(1,2))
         # k_roped = apply_rope(k[..., :n_elem], cos.repeat(1,2), sin.repeat(1,2))
         # print( (q_roped - q).sum())
@@ -256,29 +306,63 @@ class CausalSelfAttention(nn.Module):
             v = cache_v.index_copy_(1, input_pos, v)
             kv_cache = k, v
 
-        y = self.scaled_dot_product_attention(q, k, v, mask=mask)
-
+        y = self.scaled_dot_product_attention(q, k, v, mask=mask, cuseq_lens=cuseq_lens, max_seqlen=max_seqlen, force_use_masking=force_use_masking, window_size=window_size)
         y = y.reshape(B, T, C)  # re-assemble all head outputs side by side
 
         # output projection
         y = self.proj(y)
-
         return y, kv_cache
 
     def scaled_dot_product_attention(
-        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: Optional[torch.Tensor] = None
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: Optional[torch.Tensor] = None, cuseq_lens: Optional[torch.Tensor] = None,
+            max_seqlen: Optional[int] = None, force_use_masking=False, window_size: Optional[int] = None
     ):
         scale = 1.0 / math.sqrt(self.config.head_size)
-        
+
         if (
             FlashAttention2Available
             and mask is None
             and q.device.type == "cuda"
             and q.dtype in (torch.float16, torch.bfloat16)
         ):
-            from flash_attn import flash_attn_func
+            from flash_attn import flash_attn_func, flash_attn_varlen_func
+            if force_use_masking or (self._mask_attn and self.training):
+                assert cuseq_lens is not None, "cu_seqlens must be provided for intradoc mask"
+                assert max_seqlen is not None, "max_seqlen must be provided for intradoc mask"
+                #print(f"I am here using flash attention with document mask! and I am in training mode: {self.training}")
+                # print(cuseq_lens.shape, max_seqlen)
+                # merge the first two dimensions of q k v
+                bsize, seqlen, nhead, head_dim = q.shape
+                q = q.reshape(-1, q.shape[-2], q.shape[-1])
+                k = k.reshape(-1, k.shape[-2], k.shape[-1])
+                v = v.reshape(-1, v.shape[-2], v.shape[-1])
+                #print("New shapes", q.shape, k.shape, v.shape)
+                # print("cuseq_lens", cuseq_lens, cuseq_lens.shape)
+                # print("Max seqlen", max_seqlen)
+                # assert window_size is None, "Window size is not supported with flash attention var len"
+                if window_size is not None or self.config.window_size != -1:
+                    window_size = (window_size - 1, 0) if window_size is not None else (self.config.window_size - 1, 0)
+                    # print("Using window size: ", window_size)
+                    # print(f"I am here using flash attention varlen with window sizeni: {window_size}")
+                    result =  flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=cuseq_lens,
+                                                  max_seqlen_q=max_seqlen,
+                                                  max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True, window_size=window_size)
+                else:
+                    result = flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=cuseq_lens,
+                                              max_seqlen_q=max_seqlen,
+                                              max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True)
+                result = result.reshape(bsize, seqlen, nhead, head_dim)
+                return result
+            elif self.config.window_size != -1 or window_size is not None:
+                # the input window size will overwrite the config window size
+                # print("Input window size: ", window_size, "Config window size: ", self.config.window_size)
+                window_size = (self.config.window_size - 1, 0) if window_size is None else (window_size - 1, 0)
+                # print("Using window size: ", window_size)
+                # print(f"I am here using flash attention with window size: {self.config.window_size}")
+                return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True, window_size=window_size)
+            else:
+                return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True)
 
-            return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True)
         q = q.transpose(1, 2)
         k = k.transpose(1, 2)
         v = v.transpose(1, 2)
