@@ -25,7 +25,8 @@ else
   export eval_only=false
 fi
 
-if [[ $MODEL_NAME != tiny_LLaMA_* ]]; then
+# check if model name is valid, whether it starts with tiny_LLaMA_ or llama3.2
+if [[ $MODEL_NAME != tiny_LLaMA_* ]] && [[ $MODEL_NAME != llama3.2* ]]; then
   echo "Here, Error: '$MODEL_NAME' is not a valid model name."
   exit 1
 fi
