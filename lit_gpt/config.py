@@ -2145,7 +2145,7 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'dm8','
         _mlp_class="LLaMAMLP",
         intermediate_size=8192,
         rope_base=100000,
-        intradoc_mask=dm_mask,
+        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
     ),
     dict(
         name="llama3.2_3b_16k_"+dm_mask,
@@ -2163,7 +2163,7 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'dm8','
         _mlp_class="LLaMAMLP",
         intermediate_size=8192,
         rope_base=500000,
-        intradoc_mask=dm_mask,
+        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
     ),
     dict(
         name="llama3.2_3b_32k_"+dm_mask,
@@ -2181,7 +2181,7 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'dm8','
         _mlp_class="LLaMAMLP",
         intermediate_size=8192,
         rope_base=1000000,
-        intradoc_mask=dm_mask,
+        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
     ),
 ])
 configs.extend(llama3_2)
