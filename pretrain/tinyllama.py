@@ -36,12 +36,12 @@ model_name = os.environ['MODEL_NAME']
 dataset_name = os.environ['DATASET_NAME']
 save_name = os.environ['WANDB_NAME']
 gpu_memory = os.environ['GPU_MEMORY']
-out_dir = Path("out") / save_name
-
+# if there is a checkpoint path specified
+out_dir = Path(os.environ.get('CHECKPOINT_PATH', 'out')) / save_name
 # Hyperparameters
 num_of_devices = int(os.environ['NUMBER_OF_GPU'])
 num_nodes = int(os.getenv('NUM_NODES', 1))
-print("num_nodes", num_nodes)
+print("num_nodes", num_nodes, 'out_dir', out_dir)
 if num_nodes > 1:
     num_of_devices = num_of_devices * num_nodes
 global_batch_size = 512
