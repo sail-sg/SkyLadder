@@ -157,6 +157,7 @@ def setup(
         strategy = "auto"
     fabric = L.Fabric(devices=num_devices, strategy=strategy, precision=precision, loggers=[logger, wandb_logger])
     fabric.print(hparams)
+    fabric.print("micro batch size", micro_batch_size)
     # fabric.launch(main, train_data_dir, val_data_dir, resume)
     main(fabric, train_data_dir, val_data_dir, resume, eval_only)
 

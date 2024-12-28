@@ -491,7 +491,15 @@ class PackedDatasetIterator:
         elif self._mask_attn == "jp4c3":
             self.iters_per_increase = 64
             self.total_cycles = 3
+        else:
+            self.iters_per_increase = -1
         self.is_dm_attention = False
+
+        if os.getenv("NUM_NODES") is not None:
+            num_nodes = int(os.getenv("NUM_NODES"))
+            print(f"Adjusting iters_per_increase from {self.iters_per_increase} to {self.iters_per_increase // num_nodes} due to NUM_NODES={num_nodes}")
+            self.iters_per_increase = self.iters_per_increase // num_nodes
+
         if self._mask_attn in ["dm1", "dm2", "dm4", "dm8", "dm1st4", "dm1st8", "dm1st16", "dm2st4", "dm2st8", "dm2st16",
                             "dm4st4", "dm4st8", "dm4st16",
                             "dm1st32", "dm2st32", "dm4st32", "dm8st32", "dm1st64", "dm2st64", "dm4st64", "dm8st64",
