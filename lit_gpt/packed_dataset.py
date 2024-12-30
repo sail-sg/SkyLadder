@@ -638,7 +638,7 @@ class PackedDatasetIterator:
             elif self.is_dm_attention:
                 # iters_per_increase = self.get_iters_per_increase(self._mask_attn)
                 curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
-                # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
+                print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
             elif self._mask_attn in ["intradm1", "intradm2","intradm4", "intradm8"]:
                 iters_per_increase = self.get_iters_per_increase(self._mask_attn)
