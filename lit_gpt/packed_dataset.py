@@ -493,7 +493,7 @@ class PackedDatasetIterator:
             self.total_cycles = 3
         else:
             self.iters_per_increase = -1
-        self.is_dm_attention = False
+        self.is_dm_attention = "no"
 
         if os.getenv("NUM_NODES") is not None:
             num_nodes = int(os.getenv("NUM_NODES"))
@@ -507,7 +507,9 @@ class PackedDatasetIterator:
                             "dm1st256", "dm2st256", "dm4st256", "dm8st256", "dm1st512", "dm2st512", "dm4st512",
                             "dm8st512",
                             ]:
-            self.is_dm_attention = True
+            self.is_dm_attention = "dm"
+        elif self._mask_attn in ['intradm1', 'intradm2', 'intradm4', 'intradm8']:
+            self.is_dm_attention = 'intradm'
 
 
 
@@ -623,27 +625,19 @@ class PackedDatasetIterator:
             # elif self._mask_attn == "match":
             #     skip_eos_indices = get_random_skip_indices(arr, eos_id=2)
             #     cur_fragment_lens, cur_fragment_nums = get_fragment_lens_optimized(arr[:self._block_size-1], skip_eos_indices)
-            if self._mask_attn == "fix2" or self._mask_attn == "fix2rerope":
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], 2048)
-            elif self._mask_attn == "fix1" or self._mask_attn == "fix1rerope":
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], 1024)
-            elif self._mask_attn.startswith("sc"):
-                # iters_per_increase = 16
-                curr_mask_length = self.scheduled_mask_length(self._iter_num, self.iters_per_increase, self.middle_mask_length, self.end_no_change_point)
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
+
             # elif self._mask_attn == "sc2":
             #     iters_per_increase = 32
             #     curr_mask_length = self.scheduled_mask_length(self._iter_num, iters_per_increase)
             #     cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
-            elif self.is_dm_attention:
+            if self.is_dm_attention == "dm":
                 # iters_per_increase = self.get_iters_per_increase(self._mask_attn)
                 curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
-                print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
+                # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
-            elif self._mask_attn in ["intradm1", "intradm2","intradm4", "intradm8"]:
-                iters_per_increase = self.get_iters_per_increase(self._mask_attn)
-                curr_mask_length = self.calculate_mask_length(self._iter_num, iters_per_increase)
-                # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", iters_per_increase)
+            elif self.is_dm_attention == "intradm":
+                curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
+                print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", iters_per_increase)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length_intramask(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
             elif self._mask_attn.startswith("gd"):
                 curr_mask_length = gradual_increase_with_final_hold(self._iter_num, self.iters_per_increase, self.init_mask_length, self.final_mask_length, self.total_cycles)
@@ -656,6 +650,13 @@ class PackedDatasetIterator:
             elif self._mask_attn.startswith("rdall"):
                 # get a random mask length between init_mask_length and final_mask_length
                 curr_mask_length = np.random.randint(self.init_mask_length, self.final_mask_length)
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
+            elif self._mask_attn == "fix2" or self._mask_attn == "fix2rerope":
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], 2048)
+            elif self._mask_attn == "fix1" or self._mask_attn == "fix1rerope":
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], 1024)
+            elif self._mask_attn.startswith("sc"):
+                curr_mask_length = self.scheduled_mask_length(self._iter_num, self.iters_per_increase, self.middle_mask_length, self.end_no_change_point)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
             elif self._mask_attn in ['dm1rd', 'dm2rd', 'dm4rd', 'dm8rd', 'intradm1rd', 'intradm2rd', 'intradm4rd', 'intradm8rd']:
                 curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
