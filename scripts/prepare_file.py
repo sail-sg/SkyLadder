@@ -72,11 +72,11 @@ def prepare_full(
                     text_ids = tokenizer.encode(text, bpe_dropout=1)
                 builder.add_array(np.array(text_ids, dtype=builder.dtype))
 
-    if split == "train":
-        builder.write_reminder()
-    else:
-        print("Skipping reminder file for the validation set")
-
+    # if split == "train":
+    #     builder.write_reminder()
+    # else:
+    #     print("Skipping reminder file for the validation set")
+    # just skip as this might cause issues when chunk size is large
 
 def prepare(
         source_path: Path = Path("data/RedPajama-Data-1T-Sample"),
