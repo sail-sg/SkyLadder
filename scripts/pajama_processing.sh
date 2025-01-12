@@ -37,6 +37,10 @@ elif [ $PROCESSING_LENGTH == "8k" ]; then
 elif [ $PROCESSING_LENGTH == "16k" ]; then
     chunk_size=262160 # (16384 + 1) * 16
     DEST_PATH=$DEST_PATH\_16k
+elif [ $PROCESSING_LENGTH == "32k" ]; then
+    # chunk_size=33555456 # (32768 + 1) * 1024
+    chunk_size=524304 # (32768 + 1) * 16
+    DEST_PATH=$DEST_PATH\_32k
 else
    chunk_size=32784 # (2048 + 1) * 16
 fi
