@@ -73,6 +73,10 @@ elif '8k' in model_name:
 elif '16k' in model_name:
     micro_batch_size = micro_batch_size // 8  # 8k tokens
     global_batch_size = global_batch_size // 8
+elif '32k' in model_name:
+    global_batch_size = global_batch_size // 16
+    micro_batch_size = micro_batch_size // 8
+
 if True or gpu_memory == '40960':  # do not change the micro_batch_size
     micro_batch_size = micro_batch_size // 2
 
@@ -104,7 +108,7 @@ min_lr = 4e-5
 
 batch_size = global_batch_size // num_of_devices
 gradient_accumulation_steps = batch_size // micro_batch_size
-assert gradient_accumulation_steps > 0
+assert gradient_accumulation_steps > 0, f"gradient_accumulation_steps must be greater than 0, got {gradient_accumulation_steps}, because batch_size {batch_size} micro_batch_size {micro_batch_size} global batch size  {global_batch_size} num_of_devices {num_of_devices}"
 warmup_iters = warmup_steps * gradient_accumulation_steps
 
 max_iters = max_step * gradient_accumulation_steps
@@ -462,7 +466,7 @@ def create_dataloader(
             # n_chunks control the buffer size.
             # Note that the buffer size also impacts the random shuffle
             # (PackedDataset is an IterableDataset. So the shuffle is done by prefetch a buffer and shuffle the buffer)
-            n_chunks=512 if split == "train" else 2,
+            n_chunks=4 if split == "train" else 2,
             block_size=block_size,
             shuffle=shuffle,
             seed=seed + fabric.global_rank,
