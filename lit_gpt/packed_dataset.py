@@ -402,7 +402,8 @@ class PackedDatasetIterator:
         self._dtype = None
         self._block_size = block_size
         self._n_blocks = None
-
+        assert self._block_size-1 in [512, 1024, 2048, 4096, 8192, 16384, 32768, ], "Block size must be one of 512, 1024, 2048, 4096, 8192, 16384, 32768, but got {}".format(self._block_size)
+        print('Dataset block size:', self._block_size)
         self._mmaps = []
         self._buffers = []
 
@@ -473,6 +474,7 @@ class PackedDatasetIterator:
                                  'dm4st4', 'dm4st8', 'dm4st16', 'dm4st32', 'dm4st64', 'dm4st128', 'dm4st256', 'dm4st512',
                                  ]:
             self.iters_per_increase = self.get_iters_per_increase(self._mask_attn)
+            assert self.iters_per_increase > 0, "Invalid iters_per_increase for mask_attn {}".format(self._mask_attn)
         elif self._mask_attn == "gd1c4":
             self.iters_per_increase = 16
             self.total_cycles = 4.5
@@ -584,8 +586,18 @@ class PackedDatasetIterator:
             curr_mask_length = middle_length + (curr_iter_num - end_no_change_point) // iter_per_increase_1
             return min(curr_mask_length, self.final_mask_length)
 
-
     def get_iters_per_increase(self, mask_attn):
+        iters_per_increase_for_8k = self.get_iters_per_increase_for_8k(mask_attn)
+        if self._block_size == 8192 + 1:
+            return iters_per_increase_for_8k
+        elif self._block_size > 8192 + 1:
+            assert (self._block_size - 1) % 8192 == 0, "Block size must be a multiple of 8192, but got {}".format(self.block_size)
+            return iters_per_increase_for_8k // ((self._block_size -1 ) // 8192)
+        else:
+            assert 8192 % (self._block_size - 1) == 0, "Block size must be a fraction of 8192, but got {}".format(self.block_size)
+            return iters_per_increase_for_8k * (8192 // (self._block_size-1))
+
+    def get_iters_per_increase_for_8k(self, mask_attn):
         # if mask_attn == "dm1" or mask_attn == "intradm1" or mask_attn == "dm1rd" or mask_attn == "intradm1rd" or mask_attn == "dmrd1" or mask_attn == "intradmrd1":
         if mask_attn in ["dm1", "intradm1", "dm1rd", "intradm1rd", "dmrd1", "intradmrd1", 'dm1st4', 'dm1st8', 'dm1st16', 'dm1st32', 'dm1st64', 'dm1st128', 'dm1st256', 'dm1st512']:
             return 16
