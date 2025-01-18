@@ -474,7 +474,8 @@ def create_dataloader(
             process_rank=fabric.global_rank,
             mask_attn=mask_attn if split == "train" and mask_attn else "",
             merge_method=merge_method,
-            initial_iter=initial_iter
+            initial_iter=initial_iter,
+            samples_per_step = micro_batch_size * gradient_accumulation_steps # how many pieces of data is needed for one step
         )
         datasets.append(dataset)
 
