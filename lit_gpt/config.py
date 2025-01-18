@@ -2288,7 +2288,7 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
                 'rdall',
                 'dm1st4', 'dm1st8', 'dm1st16', 'dm1st64', 'dm1st128', 'dm1st256', 'dm1st512',
                 'dm2st4', 'dm2st8', 'dm2st16', 'dm2st64', 'dm2st128', 'dm2st256', 'dm2st512',
-                'dm4st4', 'dm4st8', 'dm4st16', 'dm4st64', 'dm4st128', 'dm4st256', 'dm4st512',
+                'dm4st4', 'dm4st8', 'dm4st16', 'dm4st64', 'dm4st128', 'dm4st256', 'dm4st512', "sc4"
                 ]:
     tiny_LLaMA.append(
         dict(
