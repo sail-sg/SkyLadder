@@ -424,12 +424,30 @@ class PackedDatasetIterator:
 
         if self._mask_attn in DM_ATTENTION_SUFFIX:
             self.is_dm_attention = "dm"
+            self.get_curr_iter_length = self.calculate_linear_schedule
         elif self._mask_attn in INTRADM_ATTENTION_SUFFIX:
             self.is_dm_attention = 'intradm'
+            self.get_curr_iter_length = self.calculate_linear_schedule
 
         if self._mask_attn=="sc4":
             self.init_mask_length = 4096
             self.changing_point = self._samples_per_step * 97500 # after 97500 steps, the mask length will be final length
+
+        if self._mask_attn == "sin2" or self._mask_attn == "sin2inc1024":
+            self.init_mask_length = 32
+            self.changing_point = (self.final_mask_length - self.init_mask_length) * self.iters_per_increase
+            self.get_curr_iter_length = self.calculate_mask_length_sin_schedule
+            print("schedule is sin2, changing point is", self.changing_point)
+        if self._mask_attn == "exp2" or self._mask_attn == "exp2inc1024":
+            self.init_mask_length = 32
+            self.changing_point = (self.final_mask_length - self.init_mask_length) * self.iters_per_increase
+            self.get_curr_iter_length = self.calculate_mask_length_exp_schedule
+            print("schedule is exp2, changing point is", self.changing_point)
+        if "inc" in self._mask_attn:
+            self.round_to = int(self._mask_attn.split("inc")[1])
+            print('in mask_attn', self._mask_attn, 'round_to', self.round_to)
+        else:
+            self.round_to=-1
 
         print("In iterator", self._iter_num, "Initial mask length is", self.init_mask_length, "Final mask length is", self.final_mask_length)
 
@@ -495,11 +513,49 @@ class PackedDatasetIterator:
     def __iter__(self):
         return self
 
+    def calculate_mask_length_sin_schedule(self, curr_iter_num):
+        if curr_iter_num >= self.changing_point:
+            return self.final_mask_length
+        else:
+            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * np.sin((np.pi / 2) * (curr_iter_num/self.changing_point)))
+            return curr_mask_length
 
+    def calculate_mask_length_exp_schedule(self, curr_iter_num):
+        if curr_iter_num >= self.changing_point:
+            return self.final_mask_length
+        else:
+            curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (curr_iter_num / self.changing_point))
+            return curr_mask_length
 
-    def calculate_mask_length(self, curr_iter_num, iter_per_increase_1):
-        curr_mask_length = self.init_mask_length + (curr_iter_num // iter_per_increase_1) * 1
+    def calculate_linear_schedule(self, curr_iter_num):
+        curr_mask_length = self.init_mask_length + (curr_iter_num // self.iters_per_increase)
+        return curr_mask_length
+
+    def calculate_mask_length(self, curr_iter_num):
+        return min(self.get_curr_iter_length(curr_iter_num), self.final_mask_length)
+
+    def calculate_mask_length_with_rounding(self, curr_iter_num, round_to=-1):
+        """
+        Calculate the mask length based on the current iteration number.
+
+        Parameters:
+            curr_iter_num (int): Current iteration number.
+            iter_per_increase_1 (int): Iterations required for each increment.
+            round_to (int): Round the length to this value (default is no rounding).
+
+        Returns:
+            int: Computed mask length.
+        """
+        # Increment mask length based on current iteration and increment steps
+        curr_mask_length = self.get_curr_iter_length(curr_iter_num)
+        # Apply rounding if specified
+        if round_to > 0:
+            curr_mask_length = (curr_mask_length // round_to) * round_to # round down
+            if curr_mask_length == 0:
+                curr_mask_length = self.init_mask_length
+        # Ensure the mask length does not exceed the final length
         return min(curr_mask_length, self.final_mask_length)
+
 
     def scheduled_mask_length(self, curr_iter_num, changing_point):
         if curr_iter_num < changing_point:
@@ -527,7 +583,9 @@ class PackedDatasetIterator:
         for pattern, value in name_to_rate_mapping.items():
             if pattern in mask_attn:
                 return value
-
+        if 'sin' or 'exp' in mask_attn:
+            if 'sin2' or 'exp2' in mask_attn:
+                return self._samples_per_step * 2
         raise ValueError("Mask attn must be dm1, dm2, dm4 or dm8, but got {}".format(mask_attn))
 
     def __next__(self):
@@ -546,11 +604,11 @@ class PackedDatasetIterator:
         if self._mask_attn:
             if self.is_dm_attention == "dm":
                 # iters_per_increase = self.get_iters_per_increase(self._mask_attn)
-                curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
+                curr_mask_length = self.calculate_mask_length_with_rounding(self._iter_num, round_to=self.round_to)
                 # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
             elif self.is_dm_attention == "intradm":
-                curr_mask_length = self.calculate_mask_length(self._iter_num, self.iters_per_increase)
+                curr_mask_length = self.calculate_mask_length(self._iter_num)
                 # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
                 cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length_intramask(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
             elif self._mask_attn.startswith("gd"):
