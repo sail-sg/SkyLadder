@@ -4,6 +4,7 @@ DM_ATTENTION_SUFFIX= ["dm1", "dm2", "dm4", "dm8", "dm1st4", "dm1st8", "dm1st16",
                             "dm1st128", "dm2st128", "dm4st128", "dm8st128",
                             "dm1st256", "dm2st256", "dm4st256", "dm8st256", "dm1st512", "dm2st512", "dm4st512",
                             "dm8st512",
+                      "exp2inc1024", "exp2", "sin2inc1024", "sin2", "dm2inc1024",
                             ]
 
 INTRADM_ATTENTION_SUFFIX=['intradm1', 'intradm2', 'intradm4', 'intradm8']
