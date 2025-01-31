@@ -4,7 +4,7 @@ We support intra-document masking, local window masking, etc.
 
 #### Data preparation
 The data preparation process is the same as the original tinyllama project.
-First make should that your data is in jsonl format in one directory. Then run the following:
+First make sure that your data is in jsonl format in one directory. Then run the following:
 ```bash
 export TEXT_DIR=YOUR_TEXT_DIR
 export BIN_DIR=OUTPUT_DIR
