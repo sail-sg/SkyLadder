@@ -1202,7 +1202,7 @@ tiny_LLaMA = [
         intradoc_mask='strict',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_4k",
         block_size=4096,
         vocab_size=32000,
@@ -1220,7 +1220,7 @@ tiny_LLaMA = [
         n_query_groups=1,
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_4k_intramask",
         block_size=4096,
         vocab_size=32000,
@@ -1239,7 +1239,7 @@ tiny_LLaMA = [
         intradoc_mask='strict',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k",
         block_size=8192,
         vocab_size=32000,
@@ -1257,7 +1257,7 @@ tiny_LLaMA = [
         n_query_groups=1,
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_32k_dm2",
         block_size=32768,
         vocab_size=32000,
@@ -1277,7 +1277,7 @@ tiny_LLaMA = [
         intradoc_mask='dm2',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_rb5",
         block_size=8192,
         vocab_size=32000,
@@ -1296,7 +1296,7 @@ tiny_LLaMA = [
         rope_base=100000,
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_2k_rb5",
         block_size=2048,
         vocab_size=32000,
@@ -1315,7 +1315,7 @@ tiny_LLaMA = [
         rope_base=100000,
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_nope",
         block_size=8192,
         vocab_size=32000,
@@ -1334,7 +1334,7 @@ tiny_LLaMA = [
         positional_embedding="no"
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_nopefix1",
         block_size=8192,
         vocab_size=32000,
@@ -1354,7 +1354,7 @@ tiny_LLaMA = [
         intradoc_mask="fix1",
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_nopefix2",
         block_size=8192,
         vocab_size=32000,
@@ -1374,7 +1374,7 @@ tiny_LLaMA = [
         intradoc_mask="fix2",
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_1k_nope",
         block_size=1024,
         vocab_size=32000,
@@ -1393,7 +1393,7 @@ tiny_LLaMA = [
         positional_embedding="no"
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_intramask",
         block_size=8192,
         vocab_size=32000,
@@ -1412,7 +1412,7 @@ tiny_LLaMA = [
         intradoc_mask='strict',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_dm1",
         block_size=8192,
         vocab_size=32000,
@@ -1431,7 +1431,7 @@ tiny_LLaMA = [
         intradoc_mask='dm1',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_dm2",
         block_size=8192,
         vocab_size=32000,
@@ -1450,7 +1450,7 @@ tiny_LLaMA = [
         intradoc_mask='dm2',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_dm4",
         block_size=8192,
         vocab_size=32000,
@@ -1469,7 +1469,7 @@ tiny_LLaMA = [
         intradoc_mask='dm2',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_intranope",
         block_size=8192,
         vocab_size=32000,
@@ -1489,7 +1489,7 @@ tiny_LLaMA = [
         positional_embedding="no"
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_fix2",
         block_size=8192,
         vocab_size=32000,
@@ -1508,7 +1508,7 @@ tiny_LLaMA = [
         intradoc_mask='fix2',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_fix2rerope",
         block_size=8192,
         vocab_size=32000,
@@ -1527,7 +1527,7 @@ tiny_LLaMA = [
         intradoc_mask='fix2rerope',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_fix1",
         block_size=8192,
         vocab_size=32000,
@@ -1546,7 +1546,7 @@ tiny_LLaMA = [
         intradoc_mask='fix1',
     ),
     dict(
-        org="zhuty",
+        org="new",
         name="tiny_LLaMA_120M_8k_fix1rerope",
         block_size=8192,
         vocab_size=32000,
@@ -2290,6 +2290,8 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
                 'dm2st4', 'dm2st8', 'dm2st16', 'dm2st64', 'dm2st128', 'dm2st256', 'dm2st512',
                 'dm4st4', 'dm4st8', 'dm4st16', 'dm4st64', 'dm4st128', 'dm4st256', 'dm4st512', "sc4",
                 "exp2inc1024", "exp2", "sin2inc1024", "sin2", "dm2inc1024",
+                "exp8inc1024", "exp8", "sin8inc1024", "sin8", "dm8inc1024",
+    "cos8", "log8"
                 ]:
     tiny_LLaMA.append(
         dict(
@@ -2315,7 +2317,7 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
     for context_length_str, context_length in [('1k', 1024), ('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
         tiny_LLaMA.append(
             dict(
-                org="zhuty",
+                org="new",
                 name=f"tiny_LLaMA_120M_{context_length_str}_{dm_mask}",
                 block_size=context_length,
                 vocab_size=32000,
@@ -2396,7 +2398,7 @@ for window_size in [512, 1024, 2048, 4096, ]:
     for context_length_str, context_length in [('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
         tiny_LLaMA.append(
             dict(
-                org="zhuty",
+                org="new",
                 name=f"tiny_LLaMA_120M_{context_length_str}_wd{window_size}",
                 block_size=context_length,
                 vocab_size=32000,
@@ -2416,7 +2418,7 @@ for window_size in [512, 1024, 2048, 4096, ]:
             ))
         tiny_LLaMA.append(
             dict(
-                org="zhuty",
+                org="new",
                 name=f"tiny_LLaMA_120M_{context_length_str}_intrawd{window_size}",
                 block_size=context_length,
                 vocab_size=32000,
@@ -2440,7 +2442,7 @@ for suffix in ["dwd1", "dwd2", "dwd4", "sink"]:
     for context_length_str, context_length in [('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
         tiny_LLaMA.append(
             dict(
-                org="zhuty",
+                org="new",
                 name=f"tiny_LLaMA_120M_{context_length_str}_{suffix}",
                 block_size=context_length,
                 vocab_size=32000,
@@ -2496,7 +2498,7 @@ for suffix in ["dwd1", "dwd2", "dwd4", "sink"]:
             ))
         tiny_LLaMA.append(
             dict(
-                org="zhuty",
+                org="new",
                 name=f"tiny_LLaMA_120M_{context_length_str}_intra{suffix}",
                 block_size=context_length,
                 vocab_size=32000,

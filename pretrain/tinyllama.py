@@ -155,7 +155,7 @@ def setup(
                 state_dict_type="full",
                 limit_all_gathers=True,
                 cpu_offload=False,
-                timeout=datetime.timedelta(seconds=7200),
+                timeout=datetime.timedelta(seconds=14400),
             )
     else:
         strategy = "auto"
@@ -233,20 +233,6 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only):
 
 def adjust_iter_num(model_name, initial_iter):
     return 0
-
-    # if '360M' in model_name:
-    #     # round the current iter to the nearest multiple of 120000 below initial iter, because 120000 is like 1 epoch
-    #     curr_iter = initial_iter // 120000 * 120000
-    # elif '1b' in model_name:
-    #     # round the current iter to the nearest multiple of 240000 below initial iter, because 240000 is like 1 epoch
-    #     curr_iter = initial_iter // 240000 * 240000
-    # elif '7b' in model_name or '120M' in model_name or '3b' in model_name:
-    #     # round the current iter to the nearest multiple of 480000 below initial iter, because 480000 is like 1 epoch
-    #     # curr_iter = initial_iter
-    #     curr_iter = 0  # bug fix oct 15, 2024
-    # else:
-    #     raise ValueError("Invalid model name")
-    # return curr_iter
 
 
 def step_to_window_size(step, min_window_size, max_window_size):
@@ -466,7 +452,7 @@ def create_dataloader(
             # n_chunks control the buffer size.
             # Note that the buffer size also impacts the random shuffle
             # (PackedDataset is an IterableDataset. So the shuffle is done by prefetch a buffer and shuffle the buffer)
-            n_chunks=4 if split == "train" else 2,
+            n_chunks=512 if split == "train" else 2,
             block_size=block_size,
             shuffle=shuffle,
             seed=seed + fabric.global_rank,
