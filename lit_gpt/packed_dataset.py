@@ -595,7 +595,7 @@ class PackedDatasetIterator:
 
     def get_iters_per_increase(self, mask_attn):
         name_to_rate_mapping = {
-            f"{prefix}{i}": self._samples_per_step * i for i in [1, 2, 4, 8] for prefix in ['sin', 'exp', 'dm', 'log', 'cos']
+            f"{prefix}{i}": self._samples_per_step * i for i in [1, 2, 4, 8,32] for prefix in ['sin', 'exp', 'dm', 'log', 'cos']
         }
         for pattern, value in name_to_rate_mapping.items():
             if pattern in mask_attn:
