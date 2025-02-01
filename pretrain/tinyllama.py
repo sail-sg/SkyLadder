@@ -452,7 +452,7 @@ def create_dataloader(
             # n_chunks control the buffer size.
             # Note that the buffer size also impacts the random shuffle
             # (PackedDataset is an IterableDataset. So the shuffle is done by prefetch a buffer and shuffle the buffer)
-            n_chunks=512 if split == "train" else 2,
+            n_chunks=4 if split == "train" else 2,
             block_size=block_size,
             shuffle=shuffle,
             seed=seed + fabric.global_rank,
