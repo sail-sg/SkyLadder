@@ -190,6 +190,8 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
             # use torch.load to load the model
             print("loading model from {}".format(load_from))
             state_dict = torch.load(load_from, map_location=fabric.device)
+            if "model" in state_dict:
+                state_dict = state_dict["model"]
             model.load_state_dict(state_dict, strict=True, assign=True)
 
 
