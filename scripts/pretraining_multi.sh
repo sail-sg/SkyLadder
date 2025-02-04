@@ -1,5 +1,4 @@
-export WANDB_PROJECT=Pretrain
-export WANDB_API_KEY=xxxx
+export WANDB_PROJECT=RetPretrain
 export MODEL_NAME=$1
 export DATASET_NAME=$2
 export VALID_DATASET_NAME=$3

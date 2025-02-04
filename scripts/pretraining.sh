@@ -1,4 +1,4 @@
-export WANDB_PROJECT=Pretrain
+export WANDB_PROJECT=RetPretrain
 export DATASET_NAME=$2
 export VALID_DATASET_NAME=$3
 FULL_DATA_PATH=$BINS_ROOT/$DATASET_NAME
@@ -46,7 +46,7 @@ echo "WANDB_TAGS=$WANDB_TAGS"
 
 lightning run model \
     --node-rank=0  \
-    --main-address=127.0.01 \
+    --main-address=127.0.0.1 \
     --accelerator=cuda \
     --num-nodes=1 \
     --devices=$NUMBER_OF_GPU \

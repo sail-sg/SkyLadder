@@ -29,6 +29,7 @@ import random
 
 import os
 
+print("Hello!")
 # model_name = "tiny_LLaMA_120M"
 # name = "tinyllama_120M"
 # TODO: What is a better way to pass the model name?

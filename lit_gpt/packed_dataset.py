@@ -438,8 +438,9 @@ class PackedDatasetIterator:
         'exp': self.calculate_mask_length_exp_schedule,
         'cos': self.calculate_mask_length_cos_schedule,
         'log': self.calculate_mask_length_log_schedule,
+        'inv': self.calculate_mask_length_inverse_linear_schedule,
         }
-        for  prefix in ['sin', 'exp',  'log', 'cos']:
+        for  prefix in ['sin', 'exp',  'log', 'cos',"inv"]:
             if self._mask_attn.startswith(prefix):
                 self.init_mask_length = 32
                 self.changing_point = (self.final_mask_length - self.init_mask_length) * self.iters_per_increase
@@ -544,6 +545,13 @@ class PackedDatasetIterator:
             curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (curr_iter_num / self.changing_point))
             return curr_mask_length
 
+    def calculate_mask_length_inverse_linear_schedule(self, curr_iter_num):
+        if curr_iter_num >= self.changing_point:
+            return self.final_mask_length
+        else:
+            linear_curr_mask_length = self.calculate_linear_schedule(curr_iter_num)
+            curr_mask_length = self.final_mask_length + self.init_mask_length - linear_curr_mask_length
+            return curr_mask_length
     def calculate_linear_schedule(self, curr_iter_num):
         curr_mask_length = self.init_mask_length + (curr_iter_num // self.iters_per_increase)
         return curr_mask_length
@@ -595,20 +603,11 @@ class PackedDatasetIterator:
 
     def get_iters_per_increase(self, mask_attn):
         name_to_rate_mapping = {
-            f"{prefix}{i}": self._samples_per_step * i for i in [1, 2, 4, 8,32] for prefix in ['sin', 'exp', 'dm', 'log', 'cos']
+            f"{prefix}{i}": self._samples_per_step * i for i in range(1,33) for prefix in ['sin', 'exp', 'dm', 'log', 'cos', 'inv']
         }
         for pattern, value in name_to_rate_mapping.items():
             if pattern in mask_attn:
                 return value
-        # if 'sin' or 'exp' in mask_attn:
-        #     if 'sin1' or 'exp1' in mask_attn:
-        #         return self._samples_per_step
-        #     elif 'sin2' or 'exp2' in mask_attn:
-        #         return self._samples_per_step * 2
-        #     elif 'sin4' or 'exp4' in mask_attn:
-        #         return self._samples_per_step * 4
-        #     elif 'sin8' or 'exp8' in mask_attn:
-        #         return self._samples_per_step * 8
         raise ValueError("Invalid mask, got {}".format(mask_attn))
 
     def __next__(self):
