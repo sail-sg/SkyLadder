@@ -140,6 +140,7 @@ def setup(
         tpu: bool = False,
         resume: Union[bool, Path] = False,
         eval_only: bool = False,
+        load_from: Optional[Path] = None
 ) -> None:
     precision = precision or get_default_supported_precision(training=True, tpu=tpu)
     print("devices", num_devices, "precision", precision, "resume", resume, "eval_only", eval_only)
@@ -164,10 +165,10 @@ def setup(
     fabric.print(hparams)
     fabric.print("micro batch size", micro_batch_size)
     # fabric.launch(main, train_data_dir, val_data_dir, resume)
-    main(fabric, train_data_dir, val_data_dir, resume, eval_only)
+    main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from)
 
 
-def main(fabric, train_data_dir, val_data_dir, resume, eval_only):
+def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
     monitor = Monitor(fabric, window_size=2, time_unit="seconds", log_iter_interval=log_iter_interval)
 
     if fabric.global_rank == 0:
@@ -184,6 +185,16 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only):
     with fabric.init_module(empty_init=False):
         model = GPT(config)
         model.apply(partial(model._init_weights, n_layer=config.n_layer))
+
+        # load pretrained model
+        if load_from is not None:
+            # use torch.load to load the model
+            print("loading model from {}".format(load_from))
+            state_dict = torch.load(load_from, map_location=fabric.device)
+            if "model" in state_dict:
+                state_dict = state_dict["model"]
+            model.load_state_dict(state_dict, strict=True, assign=True)
+
 
     fabric.print(f"Time to instantiate model: {time.perf_counter() - t0:.02f} seconds.")
     fabric.print(f"Total parameters {num_parameters(model):,}")
@@ -453,7 +464,7 @@ def create_dataloader(
             # n_chunks control the buffer size.
             # Note that the buffer size also impacts the random shuffle
             # (PackedDataset is an IterableDataset. So the shuffle is done by prefetch a buffer and shuffle the buffer)
-            n_chunks=512 if split == "train" else 2,
+            n_chunks=4 if split == "train" else 2,
             block_size=block_size,
             shuffle=shuffle,
             seed=seed + fabric.global_rank,
