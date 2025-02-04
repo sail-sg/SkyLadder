@@ -90,7 +90,7 @@ elif "c4_news" in dataset_name or "wiki" in dataset_name:
     max_step = 25000
 elif "mathpro" in dataset_name:
     max_step = 20000  # 4 epochs on mathpro dataset
-elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name:
+elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
     max_step = 100000  # 100B tokens
 else:
     raise ValueError("Invalid dataset name")
