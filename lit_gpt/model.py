@@ -61,6 +61,11 @@ class GPT(nn.Module):
             self.rope_cache = None
             self.mask_cache = None
 
+    def reset_rope_cache(self,new_base) -> None:
+        self.config.rope_base = new_base
+        print("Resetting rope cache with new base: ", new_base)
+        self.rope_cache = None
+
     def forward(
         self, idx: torch.Tensor, fragment_lens = None, fragment_nums = None, max_seq_length: Optional[int] = None, input_pos: Optional[torch.Tensor] = None, force_use_masking=False, window_size: Optional[int] = None
     ) -> torch.Tensor:

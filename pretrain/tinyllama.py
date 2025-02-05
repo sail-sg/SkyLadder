@@ -127,6 +127,18 @@ val_data_config = [
     ("valid", 1.0),
 ]
 
+RESET_ROPE=False
+if 'rope' in dataset_name:
+    rope_update_steps = {0:5000, # 1k
+         1000*2: 20000, # for 2k
+        2000*2:30000, # for 4k
+        4000*2: 100000, # for 8k
+        8000*2: 400000, # for 16k
+        16000*2: 1000000, # for 32k
+                         }
+    RESET_ROPE=True
+
+
 hparams = {k: v for k, v in locals().items() if isinstance(v, (int, float, str)) and not k.startswith("_")}
 logger = step_csv_logger("out", save_name, flush_logs_every_n_steps=log_iter_interval)
 wandb_logger = WandbLogger()
@@ -317,6 +329,10 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
     else:
         factor = -1
 
+    if RESET_ROPE:
+        model.reset_rope_cache(new_base=rope_update_steps[0])
+
+
     for train_data in train_dataloader:
         # resume loader state. This is not elegant but it works. Should rewrite it in the future.
         if resume and go_through_dataloader:
@@ -380,6 +396,11 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
             state["step_count"] += 1
         elif fabric.device.type == "xla":
             xm.mark_step()
+
+        if RESET_ROPE and state["step_count"] in rope_update_steps:
+            fabric.print("resetting rope with base ", rope_update_steps[state["step_count"]])
+            model.reset_rope_cache(new_base=rope_update_steps[state["step_count"]])
+
         state["iter_num"] += 1
         # input_id: B L
         total_lengths += input_ids.size(1)
