@@ -90,7 +90,7 @@ elif "c4_news" in dataset_name or "wiki" in dataset_name:
     max_step = 25000
 elif "mathpro" in dataset_name:
     max_step = 20000  # 4 epochs on mathpro dataset
-elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name:
+elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
     max_step = 100000  # 100B tokens
 else:
     raise ValueError("Invalid dataset name")
@@ -485,7 +485,7 @@ def create_dataloader(
             # n_chunks control the buffer size.
             # Note that the buffer size also impacts the random shuffle
             # (PackedDataset is an IterableDataset. So the shuffle is done by prefetch a buffer and shuffle the buffer)
-            n_chunks=4 if split == "train" else 2,
+            n_chunks=4 if split == "train" else 1,
             block_size=block_size,
             shuffle=shuffle,
             seed=seed + fabric.global_rank,

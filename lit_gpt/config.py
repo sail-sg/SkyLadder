@@ -1566,9 +1566,28 @@ tiny_LLaMA = [
     ),
     dict(
         org="StatNLP-research",
-        name="code_tiny_LLaMA_1b",
+        name="code_tiny_LLaMA_1b_8k",
         block_size=8192,
-        vocab_size=32000,
+        vocab_size=49152,
+        padding_multiple=64,
+        n_layer=22,
+        n_head=32,
+        n_embd=2048,
+        rotary_percentage=1.0,
+        parallel_residual=False,
+        bias=False,
+        _norm_class="FusedRMSNorm",
+        norm_eps=1e-5,  # Llama 2 use 1e-5. Llama 1 use 1e-6
+        _mlp_class="LLaMAMLP",
+        intermediate_size=5632,
+        n_query_groups=4,
+        condense_ratio=4
+    ),
+    dict(
+        org="StatNLP-research",
+        name="code_tiny_LLaMA_1b_32k",
+        block_size=32768,
+        vocab_size=49152,
         padding_multiple=64,
         n_layer=22,
         n_head=32,
@@ -2314,6 +2333,28 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
             intradoc_mask=dm_mask,
             rope_base=1000000,
         ))
+    tiny_LLaMA.append(
+        dict(
+            org="StatNLP-research",
+            name=f"code_tiny_LLaMA_1b_32k_{dm_mask}",
+            block_size=32768,
+            vocab_size=49152,
+            padding_multiple=64,
+            n_layer=22,
+            n_head=32,
+            n_embd=2048,
+            rotary_percentage=1.0,
+            parallel_residual=False,
+            bias=False,
+            _norm_class="FusedRMSNorm",
+            norm_eps=1e-5,  # Llama 2 use 1e-5. Llama 1 use 1e-6
+            _mlp_class="LLaMAMLP",
+            intermediate_size=5632,
+            n_query_groups=4,
+            intradoc_mask=dm_mask,
+            rope_base=1000000,
+        )
+    )
     for context_length_str, context_length in [('1k', 1024), ('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
         tiny_LLaMA.append(
             dict(
@@ -2393,6 +2434,28 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
             n_query_groups=4,
             intradoc_mask=dm_mask,
         ))
+        tiny_LLaMA.append(
+            dict(
+                org="StatNLP-research",
+                name=f"code_tiny_LLaMA_1b_{context_length_str}_{dm_mask}",
+                block_size=context_length,
+                vocab_size=49152,
+                padding_multiple=64,
+                n_layer=22,
+                n_head=32,
+                n_embd=2048,
+                rotary_percentage=1.0,
+                parallel_residual=False,
+                bias=False,
+                _norm_class="FusedRMSNorm",
+                norm_eps=1e-5,  # Llama 2 use 1e-5. Llama 1 use 1e-6
+                _mlp_class="LLaMAMLP",
+                intermediate_size=5632,
+                n_query_groups=4,
+                intradoc_mask=dm_mask,
+                rope_base=1000000,
+            )
+        )
 
 for window_size in [512, 1024, 2048, 4096, ]:
     for context_length_str, context_length in [('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
