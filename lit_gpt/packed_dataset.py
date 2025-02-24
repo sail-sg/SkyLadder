@@ -9,7 +9,7 @@ import struct
 import numpy as np
 import torch
 from torch.utils.data import IterableDataset, get_worker_info
-
+import re
 from lit_gpt.constants import DM_ATTENTION_SUFFIX, INTRADM_ATTENTION_SUFFIX, ALL_ATTENTION_SUFFIX
 
 dtypes = {1: np.uint8, 2: np.int8, 3: np.int16, 4: np.int32, 5: np.int64, 6: np.float32, 7: np.float64, 8: np.uint16}
@@ -204,7 +204,7 @@ HDR_SIZE = 24  # bytes
 class PackedDataset(IterableDataset):
     def __init__(
         self, filenames, n_chunks, block_size, seed=12345, shuffle=True, wrap=True, num_processes=1, process_rank=0, mask_attn=False, merge_method="none",
-            initial_iter=0, samples_per_step=16
+            initial_iter=0, samples_per_step=16, total_steps = 100000
     ):
         self._filenames = filenames
         self._n_chunks = n_chunks
@@ -218,6 +218,7 @@ class PackedDataset(IterableDataset):
         self._merge_method = merge_method
         self._initial_iter = initial_iter
         self.samples_per_step = samples_per_step
+        self.total_steps = total_steps
 
     def __iter__(self):
         worker_info = get_worker_info()
@@ -239,7 +240,8 @@ class PackedDataset(IterableDataset):
             mask_attn=self._mask_attn,
             merge_method=self._merge_method,
             initial_iter=self._initial_iter,
-            samples_per_step=self.samples_per_step
+            samples_per_step=self.samples_per_step,
+            total_steps = self.total_steps
         )
 
 
@@ -349,7 +351,7 @@ def jump_increase_with_final_hold(curr_iter_num, iters_per_increase, init_mask_l
     # Ensure we don’t exceed final_mask_length within each cycle
     return min(current_mask_length, final_mask_length)
 class PackedDatasetIterator:
-    def __init__(self, filenames, n_chunks, block_size, seed, shuffle, wrap, mask_attn, merge_method, initial_iter, samples_per_step):
+    def __init__(self, filenames, n_chunks, block_size, seed, shuffle, wrap, mask_attn, merge_method, initial_iter, samples_per_step, total_steps):
         self._seed = seed
         self._shuffle = shuffle
         self._rng = np.random.default_rng(seed) if shuffle else None
@@ -439,9 +441,22 @@ class PackedDatasetIterator:
         'cos': self.calculate_mask_length_cos_schedule,
         'log': self.calculate_mask_length_log_schedule,
         'inv': self.calculate_mask_length_inverse_linear_schedule,
+        'lin': self.calculate_mask_length_linear_schedule
         }
-        for  prefix in ['sin', 'exp',  'log', 'cos',"inv"]:
-            if self._mask_attn.startswith(prefix):
+        pattern = r'([a-zA-Z]+)(\d+)p'
+        match = re.match(pattern, self._mask_attn)
+        if not match:
+            print("No match for", self._mask_attn)
+
+        for  prefix in prefix_to_schedule_mapping.keys():
+            if match and match.group(1) == prefix:
+
+                self.init_mask_length = 32
+                self.changing_point = self._samples_per_step * int(total_steps*int(match.group(2))/100)
+                self.get_curr_iter_length = prefix_to_schedule_mapping[prefix]
+                print(f"Using {prefix} schedule for {mask_attn}, changing point is {self.changing_point}, total_steps {total_steps}")
+                break
+            elif self._mask_attn.startswith(prefix):
                 self.init_mask_length = 32
                 self.changing_point = (self.final_mask_length - self.init_mask_length) * self.iters_per_increase
                 self.get_curr_iter_length = prefix_to_schedule_mapping[prefix]
@@ -516,6 +531,13 @@ class PackedDatasetIterator:
 
     def __iter__(self):
         return self
+
+    def calculate_mask_length_linear_schedule(self, curr_iter_num):
+        if curr_iter_num >= self.changing_point:
+            return self.final_mask_length
+        else:
+            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * (curr_iter_num / self.changing_point))
+            return curr_mask_length
 
     def calculate_mask_length_sin_schedule(self, curr_iter_num):
         if curr_iter_num >= self.changing_point:
@@ -608,6 +630,9 @@ class PackedDatasetIterator:
         for pattern, value in name_to_rate_mapping.items():
             if pattern in mask_attn:
                 return value
+        pattern = r'[a-zA-Z]+\d+p'
+        if re.match(pattern, mask_attn):
+            return 1 # not used
         raise ValueError("Invalid mask, got {}".format(mask_attn))
 
     def __next__(self):

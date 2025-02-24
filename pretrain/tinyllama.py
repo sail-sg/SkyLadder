@@ -90,6 +90,8 @@ elif "c4_news" in dataset_name or "wiki" in dataset_name:
     max_step = 25000
 elif "mathpro" in dataset_name:
     max_step = 20000  # 4 epochs on mathpro dataset
+elif 'cc50' in dataset_name:
+    max_step = 50000
 elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
     max_step = 100000  # 100B tokens
 else:
@@ -494,7 +496,8 @@ def create_dataloader(
             mask_attn=mask_attn if split == "train" and mask_attn else "",
             merge_method=merge_method,
             initial_iter=initial_iter,
-            samples_per_step = micro_batch_size * gradient_accumulation_steps # how many pieces of data is needed for one step
+            samples_per_step = micro_batch_size * gradient_accumulation_steps, # how many pieces of data is needed for one step
+            total_steps = max_step
         )
         datasets.append(dataset)
 
