@@ -389,7 +389,7 @@ class PackedDatasetIterator:
 
         self._iter_num = initial_iter
         self.init_mask_length = 32
-        if 'st' in self._mask_attn:
+        if 'st' in self._mask_attn and self._mask_attn != "strict":
             self.set_initial_length()
 
         self.final_mask_length = block_size
