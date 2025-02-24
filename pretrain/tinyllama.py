@@ -12,6 +12,7 @@ from lightning.fabric.strategies import FSDPStrategy, XLAStrategy
 from torch.utils.data import DataLoader
 from functools import partial
 import datetime
+import re
 
 # support running without installing as a package
 wd = Path(__file__).parent.parent.resolve()
@@ -81,17 +82,12 @@ elif '32k' in model_name:
 if True or gpu_memory == '40960':  # do not change the micro_batch_size
     micro_batch_size = micro_batch_size // 2
 
-if "2b_tokens" in dataset_name or "2b" in dataset_name:
-    max_step = 10000
-elif "20b_tokens" in dataset_name or "20b" in dataset_name:
-    max_step = 40000
-elif "c4_news" in dataset_name or "wiki" in dataset_name:
-    # around 9b tokens?
-    max_step = 25000
-elif "mathpro" in dataset_name:
-    max_step = 20000  # 4 epochs on mathpro dataset
-elif 'cc50' in dataset_name:
-    max_step = 50000
+
+if 'b_tokens' in dataset_name:
+    pattern = r'_(\d+b)_tokens'
+    tokens = int(re.search(pattern, dataset_name).group(1).replace('b', '')) # parse the number of tokens
+    max_step = tokens * 1000
+    print(f"Found preset number of tokens from {dataset_name}, which is {tokens}, setting max_step to {tokens * 1000}")
 elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
     max_step = 100000  # 100B tokens
 else:
