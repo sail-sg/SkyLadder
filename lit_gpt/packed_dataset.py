@@ -14,6 +14,7 @@ from lit_gpt.constants import DM_ATTENTION_SUFFIX, INTRADM_ATTENTION_SUFFIX, ALL
 
 dtypes = {1: np.uint8, 2: np.int8, 3: np.int16, 4: np.int32, 5: np.int64, 6: np.float32, 7: np.float64, 8: np.uint16}
 
+
 # Optimized function using NumPy
 def get_fragment_lens_optimized(chunk, skip_indices):
     skip_indices_set = set(skip_indices)
@@ -35,10 +36,14 @@ def get_fragment_lens_optimized(chunk, skip_indices):
 
     return fragment_lengths, len(fragment_lengths)
 
+
 def get_fragment_lens_fixed_length(chunk, fixed_length, is_multiple=True):
     assert fixed_length > 0, "Fixed length must be greater than 0, but got {}".format(fixed_length)
-    assert not is_multiple or len(chunk) % fixed_length == 0, "Chunk length must be a multiple of fixed length, but got {} and {}".format(len(chunk), fixed_length)
-    filtered_indices = np.arange(fixed_length, len(chunk), fixed_length) -1 # -1 was added on Oct 17, before training of intradm models, but the old models are trained with the bug
+    assert not is_multiple or len(
+        chunk) % fixed_length == 0, "Chunk length must be a multiple of fixed length, but got {} and {}".format(
+        len(chunk), fixed_length)
+    filtered_indices = np.arange(fixed_length, len(chunk),
+                                 fixed_length) - 1  # -1 was added on Oct 17, before training of intradm models, but the old models are trained with the bug
     # if len(skip_indices) > 0:
     #     print("Skipper indices:", len(skip_indices), "Filtered indices:", len(filtered_indices))
     # # Adjust how fragment lengths are calculated to match the original function
@@ -55,9 +60,12 @@ def get_fragment_lens_fixed_length(chunk, fixed_length, is_multiple=True):
 
     return fragment_lengths, len(fragment_lengths)
 
+
 def get_fragment_lens_fixed_length_intramask(chunk, fixed_length, is_multiple=True):
     assert fixed_length > 0, "Fixed length must be greater than 0, but got {}".format(fixed_length)
-    assert not is_multiple or len(chunk) % fixed_length == 0, "Chunk length must be a multiple of fixed length, but got {} and {}".format(len(chunk), fixed_length)
+    assert not is_multiple or len(
+        chunk) % fixed_length == 0, "Chunk length must be a multiple of fixed length, but got {} and {}".format(
+        len(chunk), fixed_length)
     is_two = np.where(chunk == 2)[0]
     filtered_indices = is_two
     fixed_indices = np.arange(fixed_length, len(chunk), fixed_length)
@@ -94,8 +102,9 @@ HDR_SIZE = 24  # bytes
 
 class PackedDataset(IterableDataset):
     def __init__(
-        self, filenames, n_chunks, block_size, seed=12345, shuffle=True, wrap=True, num_processes=1, process_rank=0, mask_attn=False, merge_method="none",
-            initial_iter=0, samples_per_step=16, total_steps = 100000
+            self, filenames, n_chunks, block_size, seed=12345, shuffle=True, wrap=True, num_processes=1, process_rank=0,
+            mask_attn=False, merge_method="none",
+            initial_iter=0, samples_per_step=16, total_steps=100000
     ):
         self._filenames = filenames
         self._n_chunks = n_chunks
@@ -132,7 +141,7 @@ class PackedDataset(IterableDataset):
             merge_method=self._merge_method,
             initial_iter=self._initial_iter,
             samples_per_step=self.samples_per_step,
-            total_steps = self.total_steps
+            total_steps=self.total_steps
         )
 
 
@@ -185,12 +194,12 @@ class PackedDatasetBuilder(object):
     def add_array(self, arr):
         while self._idx + arr.shape[0] > self._chunk_size:
             part_len = self._chunk_size - self._idx
-            self._arr[self._idx : self._idx + part_len] = arr[:part_len]
+            self._arr[self._idx: self._idx + part_len] = arr[:part_len]
             self._write_chunk()
             arr = arr[part_len:]
 
         arr_len = arr.shape[0]
-        self._arr[self._idx : self._idx + arr_len] = arr
+        self._arr[self._idx: self._idx + arr_len] = arr
         self._idx += arr_len
 
     def write_reminder(self):
@@ -198,7 +207,8 @@ class PackedDatasetBuilder(object):
 
 
 class PackedDatasetIterator:
-    def __init__(self, filenames, n_chunks, block_size, seed, shuffle, wrap, mask_attn, merge_method, initial_iter, samples_per_step, total_steps):
+    def __init__(self, filenames, n_chunks, block_size, seed, shuffle, wrap, mask_attn, merge_method, initial_iter,
+                 samples_per_step, total_steps):
         self._seed = seed
         self._shuffle = shuffle
         self._rng = np.random.default_rng(seed) if shuffle else None
@@ -217,7 +227,9 @@ class PackedDatasetIterator:
         self._dtype = None
         self._block_size = block_size
         self._n_blocks = None
-        assert self._block_size-1 in [512, 1024, 2048, 4096, 8192, 16384, 32768, ], "Block size must be one of 512, 1024, 2048, 4096, 8192, 16384, 32768, but got {}".format(self._block_size)
+        assert self._block_size - 1 in [512, 1024, 2048, 4096, 8192, 16384,
+                                        32768, ], "Block size must be one of 512, 1024, 2048, 4096, 8192, 16384, 32768, but got {}".format(
+            self._block_size)
         print('Dataset block size:', self._block_size)
         self._mmaps = []
         self._buffers = []
@@ -225,13 +237,11 @@ class PackedDatasetIterator:
         self._block_idxs = []
         self._curr_idx = 0
         print("In iterator, whether we are masking the attention?", mask_attn)
-        print("In iterator, the merge method is", merge_method)
         self._mask_attn = mask_attn
         self._samples_per_step = samples_per_step
-        assert self._mask_attn in ["strict", "", "sc4"] + ALL_ATTENTION_SUFFIX, "Mask attn must be valid, but got {}".format(self._mask_attn)
-        self._merge_method = merge_method
-        if self._mask_attn == "adaptive":
-            assert self._merge_method == "overlap", "Merge method must be overlap when mask_attn is adaptive, but got {}".format(self._merge_method)
+        assert self._mask_attn in ["strict", "",
+                                   "sc4"] + ALL_ATTENTION_SUFFIX, "Mask attn must be valid, but got {}".format(
+            self._mask_attn)
         self._load_n_chunks()
 
         self._iter_num = initial_iter
@@ -255,48 +265,51 @@ class PackedDatasetIterator:
             self.is_dm_attention = 'intradm'
             self.get_curr_iter_length = self.calculate_linear_schedule
 
-        if self._mask_attn=="sc4":
+        if self._mask_attn == "sc4":
             self.init_mask_length = 4096
-            self.changing_point = self._samples_per_step * 97500 # after 97500 steps, the mask length will be final length
+            self.changing_point = self._samples_per_step * 97500  # after 97500 steps, the mask length will be final length
 
         prefix_to_schedule_mapping = {
-        'sin': self.calculate_mask_length_sin_schedule,
-        'exp': self.calculate_mask_length_exp_schedule,
-        'cos': self.calculate_mask_length_cos_schedule,
-        'log': self.calculate_mask_length_log_schedule,
-        'inv': self.calculate_mask_length_inverse_linear_schedule,
-        'lin': self.calculate_mask_length_linear_schedule
+            'sin': self.calculate_mask_length_sin_schedule,
+            'exp': self.calculate_mask_length_exp_schedule,
+            'cos': self.calculate_mask_length_cos_schedule,
+            'log': self.calculate_mask_length_log_schedule,
+            'inv': self.calculate_mask_length_inverse_linear_schedule,
+            'lin': self.calculate_mask_length_linear_schedule
         }
         pattern = r'([a-zA-Z]+)(\d+)p'
         match = re.match(pattern, self._mask_attn)
         if not match:
             print("No match for", self._mask_attn)
 
-        for  prefix in prefix_to_schedule_mapping.keys():
+        for prefix in prefix_to_schedule_mapping.keys():
             if match and match.group(1) == prefix:
 
                 self.init_mask_length = 32
-                self.changing_point = self._samples_per_step * int(total_steps*int(match.group(2))/100)
+                self.changing_point = self._samples_per_step * int(total_steps * int(match.group(2)) / 100)
                 self.get_curr_iter_length = prefix_to_schedule_mapping[prefix]
-                print(f"Using {prefix} schedule for {mask_attn}, changing point is {self.changing_point}, total_steps {total_steps}")
+                print(
+                    f"Using {prefix} schedule for {mask_attn}, changing point is {self.changing_point}, total_steps {total_steps}")
                 break
             elif self._mask_attn.startswith(prefix):
                 self.init_mask_length = 32
                 self.changing_point = (self.final_mask_length - self.init_mask_length) * self.iters_per_increase
                 self.get_curr_iter_length = prefix_to_schedule_mapping[prefix]
-                print(f"Using {prefix} schedule for mask length, changing point is {self.changing_point}, iters_per_increase is {self.iters_per_increase}")
+                print(
+                    f"Using {prefix} schedule for mask length, changing point is {self.changing_point}, iters_per_increase is {self.iters_per_increase}")
 
         if "inc" in self._mask_attn:
             self.round_to = int(self._mask_attn.split("inc")[1])
             print('in mask_attn', self._mask_attn, 'round_to', self.round_to)
         else:
-            self.round_to=-1
+            self.round_to = -1
 
-        print("In iterator", self._iter_num, "Initial mask length is", self.init_mask_length, "Final mask length is", self.final_mask_length)
+        print("In iterator", self._iter_num, "Initial mask length is", self.init_mask_length, "Final mask length is",
+              self.final_mask_length)
 
     def set_initial_length(self):
         # Mapping of mask_attn patterns to init_mask_length values
-        mask_mapping = { f'st{i}': i for i in [4, 8, 16, 32, 64, 128, 256, 512] }
+        mask_mapping = {f'st{i}': i for i in [4, 8, 16, 32, 64, 128, 256, 512]}
         # Set init_mask_length based on the mapping
         for pattern, value in mask_mapping.items():
             if pattern in self._mask_attn:
@@ -325,7 +338,7 @@ class PackedDatasetIterator:
         self._mmaps = []
         self._buffers = []
 
-        if self._n_chunks > len(self._filenames[self._file_idx :]):
+        if self._n_chunks > len(self._filenames[self._file_idx:]):
             if not self._wrap:
                 raise StopIteration
             self._file_idx = 0
@@ -334,7 +347,8 @@ class PackedDatasetIterator:
             filename = self._filenames[self._file_idx + i]
             if self._dtype is None:
                 self._dtype, self._chunk_size = self._read_header(filename)
-                assert self._chunk_size % self._block_size == 0, "Chunk size {} must be a multiple of block size {}".format(self._chunk_size, self._block_size)
+                assert self._chunk_size % self._block_size == 0, "Chunk size {} must be a multiple of block size {}".format(
+                    self._chunk_size, self._block_size)
                 self._n_blocks = self._chunk_size // self._block_size
             # TODO: check header matches with previous files
             mmap = np.memmap(filename, mode="r", order="C", offset=HDR_SIZE)
@@ -360,35 +374,40 @@ class PackedDatasetIterator:
         if curr_iter_num >= self.changing_point:
             return self.final_mask_length
         else:
-            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * (curr_iter_num / self.changing_point))
+            curr_mask_length = self.init_mask_length + int(
+                (self.final_mask_length - self.init_mask_length) * (curr_iter_num / self.changing_point))
             return curr_mask_length
 
     def calculate_mask_length_sin_schedule(self, curr_iter_num):
         if curr_iter_num >= self.changing_point:
             return self.final_mask_length
         else:
-            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * np.sin((np.pi / 2) * (curr_iter_num/self.changing_point)))
+            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * np.sin(
+                (np.pi / 2) * (curr_iter_num / self.changing_point)))
             return curr_mask_length
 
     def calculate_mask_length_cos_schedule(self, curr_iter_num):
         if curr_iter_num >= self.changing_point:
             return self.final_mask_length
         else:
-            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) *(1 - np.cos((np.pi)* (curr_iter_num/self.changing_point))))
+            curr_mask_length = self.init_mask_length + int((self.final_mask_length - self.init_mask_length) * (
+                        1 - np.cos((np.pi) * (curr_iter_num / self.changing_point))))
             return curr_mask_length
 
     def calculate_mask_length_log_schedule(self, curr_iter_num):
         if curr_iter_num >= self.changing_point:
             return self.final_mask_length
         else:
-            curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (np.log(1 + curr_iter_num) / np.log(1 + self.changing_point)))
+            curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (
+                        np.log(1 + curr_iter_num) / np.log(1 + self.changing_point)))
             return curr_mask_length
 
     def calculate_mask_length_exp_schedule(self, curr_iter_num):
         if curr_iter_num >= self.changing_point:
             return self.final_mask_length
         else:
-            curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (curr_iter_num / self.changing_point))
+            curr_mask_length = int(self.init_mask_length * (self.final_mask_length / self.init_mask_length) ** (
+                        curr_iter_num / self.changing_point))
             return curr_mask_length
 
     def calculate_mask_length_inverse_linear_schedule(self, curr_iter_num):
@@ -398,6 +417,7 @@ class PackedDatasetIterator:
             linear_curr_mask_length = self.calculate_linear_schedule(curr_iter_num)
             curr_mask_length = self.final_mask_length + self.init_mask_length - linear_curr_mask_length
             return curr_mask_length
+
     def calculate_linear_schedule(self, curr_iter_num):
         curr_mask_length = self.init_mask_length + (curr_iter_num // self.iters_per_increase)
         return curr_mask_length
@@ -421,12 +441,11 @@ class PackedDatasetIterator:
         curr_mask_length = self.get_curr_iter_length(curr_iter_num)
         # Apply rounding if specified
         if round_to > 0:
-            curr_mask_length = (curr_mask_length // round_to) * round_to # round down
+            curr_mask_length = (curr_mask_length // round_to) * round_to  # round down
             if curr_mask_length == 0:
                 curr_mask_length = self.init_mask_length
         # Ensure the mask length does not exceed the final length
         return min(curr_mask_length, self.final_mask_length)
-
 
     def scheduled_mask_length(self, curr_iter_num, changing_point):
         if curr_iter_num < changing_point:
@@ -436,27 +455,17 @@ class PackedDatasetIterator:
             return self.final_mask_length
             # Fixed mask length during the no-change phase
 
-    # def get_iters_per_increase(self, mask_attn):
-    #     iters_per_increase_for_8k = self.get_iters_per_increase_for_8k(mask_attn)
-    #     if self._block_size == 8192 + 1:
-    #         return iters_per_increase_for_8k
-    #     elif self._block_size > 8192 + 1:
-    #         assert (self._block_size - 1) % 8192 == 0, "Block size must be a multiple of 8192, but got {}".format(self.block_size)
-    #         return iters_per_increase_for_8k // ((self._block_size -1 ) // 8192)
-    #     else:
-    #         assert 8192 % (self._block_size - 1) == 0, "Block size must be a fraction of 8192, but got {}".format(self.block_size)
-    #         return iters_per_increase_for_8k * (8192 // (self._block_size-1))
-
     def get_iters_per_increase(self, mask_attn):
         name_to_rate_mapping = {
-            f"{prefix}{i}": self._samples_per_step * i for i in range(1,33) for prefix in ['sin', 'exp', 'dm', 'log', 'cos', 'inv']
+            f"{prefix}{i}": self._samples_per_step * i for i in range(1, 33) for prefix in
+            ['sin', 'exp', 'dm', 'log', 'cos', 'inv']
         }
         for pattern, value in name_to_rate_mapping.items():
             if pattern in mask_attn:
                 return value
         pattern = r'[a-zA-Z]+\d+p'
         if re.match(pattern, mask_attn):
-            return 1 # not used
+            return 1  # not used
         raise ValueError("Invalid mask, got {}".format(mask_attn))
 
     def __next__(self):
@@ -469,7 +478,7 @@ class PackedDatasetIterator:
         elem_id = (block_idx % self._n_blocks) * self._block_size
         offset = np.dtype(self._dtype).itemsize * elem_id
         arr = np.frombuffer(buffer, dtype=self._dtype, count=self._block_size, offset=offset)
-        arr = torch.from_numpy(arr.astype(np.int64)) # block size here is 8193
+        arr = torch.from_numpy(arr.astype(np.int64))  # block size here is 8193
         # print("Block size", self._block_size, "arr shape", arr.shape, "arr dtype", arr.dtype, "arr", arr)
         self._curr_idx += 1
         if self._mask_attn:
@@ -477,15 +486,19 @@ class PackedDatasetIterator:
                 # iters_per_increase = self.get_iters_per_increase(self._mask_attn)
                 curr_mask_length = self.calculate_mask_length_with_rounding(self._iter_num, round_to=self.round_to)
                 # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size - 1],
+                                                                                      curr_mask_length,
+                                                                                      is_multiple=False)
             elif self.is_dm_attention == "intradm":
                 curr_mask_length = self.calculate_mask_length(self._iter_num)
                 # print("Current iteration number is", self._iter_num, "With masking strategy", self._mask_attn, "Current mask length is", curr_mask_length, "Iters per increase", self.iters_per_increase)
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length_intramask(arr[:self._block_size-1], curr_mask_length, is_multiple=False)
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length_intramask(
+                    arr[:self._block_size - 1], curr_mask_length, is_multiple=False)
             else:
-                assert self._mask_attn == "strict", "Mask attn must be either adaptive or strict, but got {}".format(self._mask_attn)
+                assert self._mask_attn == "strict", "Mask attn must be either adaptive or strict, but got {}".format(
+                    self._mask_attn)
                 # cur_fragment_lens, cur_fragment_nums = get_fragment_lens(arr[:self._block_size-1], []) # only calculate the input
-                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_optimized(arr[:self._block_size-1], [])
+                cur_fragment_lens, cur_fragment_nums = get_fragment_lens_optimized(arr[:self._block_size - 1], [])
 
             # print("cur_fragment_lens", cur_fragment_lens, "cur_fragment_nums", cur_fragment_nums)
             # print("Yieleding with mask attn, shapes are : ", arr.shape, len(cur_fragment_lens), cur_fragment_nums, "Sum of fragment lens", sum(cur_fragment_lens))
