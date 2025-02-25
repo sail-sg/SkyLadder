@@ -2150,7 +2150,6 @@ tiny_LLaMA = [
     ),
 ]
 
-
 llama3_2 = [
     dict(
         name="llama3.2_3b_8k",
@@ -2222,95 +2221,91 @@ llama3_2 = [
     ),
 ]
 
-for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'dm8','intradm8', 'intramask']:
+for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'dm8', 'intradm8', 'intramask']:
     llama3_2.extend([
-    dict(
-        name="llama3.2coder_3b_8k_"+dm_mask,
-        block_size=8192,
-        vocab_size=49152,
-        n_layer=28,
-        n_embd=3072,
-        n_head=24,
-        n_query_groups=8,
-        rotary_percentage=1.0,
-        parallel_residual=False,
-        bias=False,
-        _norm_class="RMSNorm",
-        norm_eps=1e-5,
-        _mlp_class="LLaMAMLP",
-        intermediate_size=8192,
-        rope_base=100000,
-        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
-    ),
-    dict(
-        name="llama3.2_3b_8k_"+dm_mask,
-        block_size=8192,
-        vocab_size=32000,
-        n_layer=28,
-        n_embd=3072,
-        n_head=24,
-        n_query_groups=8,
-        rotary_percentage=1.0,
-        parallel_residual=False,
-        bias=False,
-        _norm_class="RMSNorm",
-        norm_eps=1e-5,
-        _mlp_class="LLaMAMLP",
-        intermediate_size=8192,
-        rope_base=100000,
-        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
-    ),
-    dict(
-        name="llama3.2_3b_16k_"+dm_mask,
-        block_size=16384,
-        vocab_size=32000,
-        n_layer=28,
-        n_embd=3072,
-        n_head=24,
-        n_query_groups=8,
-        rotary_percentage=1.0,
-        parallel_residual=False,
-        bias=False,
-        _norm_class="RMSNorm",
-       norm_eps=1e-5,
-        _mlp_class="LLaMAMLP",
-        intermediate_size=8192,
-        rope_base=500000,
-        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
-    ),
-    dict(
-        name="llama3.2_3b_32k_"+dm_mask,
-        block_size=32768,
-        vocab_size=32000,
-        n_layer=28,
-        n_embd=3072,
-        n_head=24,
-        n_query_groups=8,
-        rotary_percentage=1.0,
-        parallel_residual=False,
-        bias=False,
-        _norm_class="RMSNorm",
-       norm_eps=1e-5,
-        _mlp_class="LLaMAMLP",
-        intermediate_size=8192,
-        rope_base=1000000,
-        intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
-    ),
-])
+        dict(
+            name="llama3.2coder_3b_8k_" + dm_mask,
+            block_size=8192,
+            vocab_size=49152,
+            n_layer=28,
+            n_embd=3072,
+            n_head=24,
+            n_query_groups=8,
+            rotary_percentage=1.0,
+            parallel_residual=False,
+            bias=False,
+            _norm_class="RMSNorm",
+            norm_eps=1e-5,
+            _mlp_class="LLaMAMLP",
+            intermediate_size=8192,
+            rope_base=100000,
+            intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
+        ),
+        dict(
+            name="llama3.2_3b_8k_" + dm_mask,
+            block_size=8192,
+            vocab_size=32000,
+            n_layer=28,
+            n_embd=3072,
+            n_head=24,
+            n_query_groups=8,
+            rotary_percentage=1.0,
+            parallel_residual=False,
+            bias=False,
+            _norm_class="RMSNorm",
+            norm_eps=1e-5,
+            _mlp_class="LLaMAMLP",
+            intermediate_size=8192,
+            rope_base=100000,
+            intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
+        ),
+        dict(
+            name="llama3.2_3b_16k_" + dm_mask,
+            block_size=16384,
+            vocab_size=32000,
+            n_layer=28,
+            n_embd=3072,
+            n_head=24,
+            n_query_groups=8,
+            rotary_percentage=1.0,
+            parallel_residual=False,
+            bias=False,
+            _norm_class="RMSNorm",
+            norm_eps=1e-5,
+            _mlp_class="LLaMAMLP",
+            intermediate_size=8192,
+            rope_base=500000,
+            intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
+        ),
+        dict(
+            name="llama3.2_3b_32k_" + dm_mask,
+            block_size=32768,
+            vocab_size=32000,
+            n_layer=28,
+            n_embd=3072,
+            n_head=24,
+            n_query_groups=8,
+            rotary_percentage=1.0,
+            parallel_residual=False,
+            bias=False,
+            _norm_class="RMSNorm",
+            norm_eps=1e-5,
+            _mlp_class="LLaMAMLP",
+            intermediate_size=8192,
+            rope_base=1000000,
+            intradoc_mask=dm_mask if dm_mask != 'intramask' else 'strict'
+        ),
+    ])
 configs.extend(llama3_2)
 
-for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2', 'fix1', "sc1", "sc2", "sc3", "sc4",
+for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2', "sc4",
                 "dm8", "intradm8",
-                "gd1c4", "jp1c9", "gd2c2", "jp2c5", "gd4c1", "jp4c3",
-                "dm1rd", "dm2rd", "dm4rd", "dm8rd", "intradm1rd", "intradm2rd", "intradm4rd", "intradm8rd",
-                'dmrd1', 'dmrd2', 'dmrd4', 'dmrd8', 'intradmrd1', 'intradmrd2', 'intradmrd4', 'intradmrd8',
-                'rdall',
                 'dm1st4', 'dm1st8', 'dm1st16', 'dm1st64', 'dm1st128', 'dm1st256', 'dm1st512',
                 'dm2st4', 'dm2st8', 'dm2st16', 'dm2st64', 'dm2st128', 'dm2st256', 'dm2st512',
                 'dm4st4', 'dm4st8', 'dm4st16', 'dm4st64', 'dm4st128', 'dm4st256', 'dm4st512', "sc4",
                 "exp2inc1024", "exp2", "sin2inc1024", "sin2", "dm2inc1024",
                 "exp8inc1024", "exp8", "sin8inc1024", "sin8", "dm8inc1024",
-    "cos8", "log8","dm32", "dm5", "dm6", "dm7", "dm3", "inv8", "lin95p", 'lin90p','lin80p'
+                "cos8", "log8", "dm32", "dm5", "dm6", "dm7", "dm3", "inv8", "lin95p", 'lin90p', 'lin80p'
                 ]:
     tiny_LLaMA.append(
         dict(
@@ -2456,129 +2451,6 @@ for dm_mask in ['intradm1', 'intradm2', 'intradm4', 'dm1', 'dm2', 'dm4', 'fix2',
                 rope_base=1000000,
             )
         )
-
-for window_size in [512, 1024, 2048, 4096, ]:
-    for context_length_str, context_length in [('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
-        tiny_LLaMA.append(
-            dict(
-                org="new",
-                name=f"tiny_LLaMA_120M_{context_length_str}_wd{window_size}",
-                block_size=context_length,
-                vocab_size=32000,
-                padding_multiple=64,
-                n_layer=12,
-                n_head=12,
-                n_embd=768,
-                rotary_percentage=1.0,
-                parallel_residual=False,
-                bias=False,
-                _norm_class="FusedRMSNorm",
-                norm_eps=1e-5,
-                _mlp_class="LLaMAMLP",
-                intermediate_size=2048,
-                n_query_groups=1,
-                window_size=window_size,
-            ))
-        tiny_LLaMA.append(
-            dict(
-                org="new",
-                name=f"tiny_LLaMA_120M_{context_length_str}_intrawd{window_size}",
-                block_size=context_length,
-                vocab_size=32000,
-                padding_multiple=64,
-                n_layer=12,
-                n_head=12,
-                n_embd=768,
-                rotary_percentage=1.0,
-                parallel_residual=False,
-                bias=False,
-                _norm_class="FusedRMSNorm",
-                norm_eps=1e-5,
-                _mlp_class="LLaMAMLP",
-                intermediate_size=2048,
-                n_query_groups=1,
-                window_size=window_size,
-                intradoc_mask='strict',
-            ))
-
-for suffix in ["dwd1", "dwd2", "dwd4", "sink"]:
-    for context_length_str, context_length in [('4k', 4096), ('8k', 8192), ('2k', 2048), ]:
-        tiny_LLaMA.append(
-            dict(
-                org="new",
-                name=f"tiny_LLaMA_120M_{context_length_str}_{suffix}",
-                block_size=context_length,
-                vocab_size=32000,
-                padding_multiple=64,
-                n_layer=12,
-                n_head=12,
-                n_embd=768,
-                rotary_percentage=1.0,
-                parallel_residual=False,
-                bias=False,
-                _norm_class="FusedRMSNorm",
-                norm_eps=1e-5,
-                _mlp_class="LLaMAMLP",
-                intermediate_size=2048,
-                n_query_groups=1,
-            ))
-        tiny_LLaMA.append(dict(
-            org="StatNLP-research",
-            name=f"tiny_LLaMA_360M_{context_length_str}_{suffix}",
-            block_size=context_length,
-            vocab_size=32000,
-            padding_multiple=64,
-            n_layer=18,  # 16
-            n_head=16,  # 16
-            n_embd=1024,  # 1024
-            rotary_percentage=1.0,
-            parallel_residual=False,
-            bias=False,
-            _norm_class="FusedRMSNorm",
-            norm_eps=1e-5,
-            _mlp_class="LLaMAMLP",
-            intermediate_size=4096,
-            n_query_groups=16,  # 16
-        ))
-        tiny_LLaMA.append(
-            dict(
-                org="StatNLP-research",
-                name=f"tiny_LLaMA_1b_{context_length_str}_{suffix}",
-                block_size=context_length,
-                vocab_size=32000,
-                padding_multiple=64,
-                n_layer=22,
-                n_head=32,
-                n_embd=2048,
-                rotary_percentage=1.0,
-                parallel_residual=False,
-                bias=False,
-                _norm_class="FusedRMSNorm",
-                norm_eps=1e-5,  # Llama 2 use 1e-5. Llama 1 use 1e-6
-                _mlp_class="LLaMAMLP",
-                intermediate_size=5632,
-                n_query_groups=4,
-            ))
-        tiny_LLaMA.append(
-            dict(
-                org="new",
-                name=f"tiny_LLaMA_120M_{context_length_str}_intra{suffix}",
-                block_size=context_length,
-                vocab_size=32000,
-                padding_multiple=64,
-                n_layer=12,
-                n_head=12,
-                n_embd=768,
-                rotary_percentage=1.0,
-                parallel_residual=False,
-                bias=False,
-                _norm_class="FusedRMSNorm",
-                norm_eps=1e-5,
-                _mlp_class="LLaMAMLP",
-                intermediate_size=2048,
-                n_query_groups=1,
-                intradoc_mask='strict',
-            ))
 
 configs.extend(tiny_LLaMA)
 
