@@ -27,13 +27,8 @@ from lit_gpt.utils import chunked_cross_entropy, get_default_supported_precision
 from pytorch_lightning.loggers import WandbLogger
 from lit_gpt import FusedCrossEntropyLoss
 import random
-
 import os
 
-print("Hello!")
-# model_name = "tiny_LLaMA_120M"
-# name = "tinyllama_120M"
-# TODO: What is a better way to pass the model name?
 model_name = os.environ['MODEL_NAME']
 dataset_name = os.environ['DATASET_NAME']
 save_name = os.environ['WANDB_NAME']
@@ -82,10 +77,9 @@ elif '32k' in model_name:
 if True or gpu_memory == '40960':  # do not change the micro_batch_size
     micro_batch_size = micro_batch_size // 2
 
-
 if 'b_tokens' in dataset_name:
     pattern = r'_(\d+b)_tokens'
-    tokens = int(re.search(pattern, dataset_name).group(1).replace('b', '')) # parse the number of tokens
+    tokens = int(re.search(pattern, dataset_name).group(1).replace('b', ''))  # parse the number of tokens
     max_step = tokens * 1000
     print(f"Found preset number of tokens from {dataset_name}, which is {tokens}, setting max_step to {tokens * 1000}")
 elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
@@ -125,17 +119,16 @@ val_data_config = [
     ("valid", 1.0),
 ]
 
-RESET_ROPE=False
+RESET_ROPE = False
 if 'rope' in dataset_name:
-    rope_update_steps = {0:5000, # 1k
-         1000*2: 20000, # for 2k
-        2000*2:30000, # for 4k
-        4000*2: 100000, # for 8k
-        8000*2: 400000, # for 16k
-        16000*2: 1000000, # for 32k
+    rope_update_steps = {0: 5000,  # 1k
+                         1000 * 2: 20000,  # for 2k
+                         2000 * 2: 30000,  # for 4k
+                         4000 * 2: 100000,  # for 8k
+                         8000 * 2: 400000,  # for 16k
+                         16000 * 2: 1000000,  # for 32k
                          }
-    RESET_ROPE=True
-
+    RESET_ROPE = True
 
 hparams = {k: v for k, v in locals().items() if isinstance(v, (int, float, str)) and not k.startswith("_")}
 logger = step_csv_logger("out", save_name, flush_logs_every_n_steps=log_iter_interval)
@@ -205,7 +198,6 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
                 state_dict = state_dict["model"]
             model.load_state_dict(state_dict, strict=True, assign=True)
 
-
     fabric.print(f"Time to instantiate model: {time.perf_counter() - t0:.02f} seconds.")
     fabric.print(f"Total parameters {num_parameters(model):,}")
 
@@ -250,10 +242,6 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
     fabric.print(f"Training time: {(time.perf_counter() - train_time):.2f}s")
     if fabric.device.type == "cuda":
         fabric.print(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
-
-def step_to_window_size(step, min_window_size, max_window_size):
-    curr_window_size = min_window_size + step
-    return min(curr_window_size, max_window_size)
 
 
 def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval_only=False):
@@ -337,7 +325,6 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
         input_ids = train_input_ids[:, 0: model.config.block_size].contiguous()
         targets = train_input_ids[:, 1: model.config.block_size + 1].contiguous()
 
-
         # print("input_ids", input_ids.shape, "targets", targets.shape)
 
         is_accumulating = (state["iter_num"] + 1) % gradient_accumulation_steps != 0
@@ -402,9 +389,9 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
             monitor.eval_end(t1)
             fabric.print(f"step {state['iter_num']}: val loss {val_loss:.4f}, val time: {t1 * 1000:.2f}ms")
             fabric.log_dict({"metric/val_loss": val_loss.item(), "total_tokens": model.config.block_size * (
-                        state["iter_num"] + 1) * micro_batch_size * fabric.world_size}, state["step_count"])
+                    state["iter_num"] + 1) * micro_batch_size * fabric.world_size}, state["step_count"])
             fabric.log_dict({"metric/val_ppl": math.exp(val_loss.item()), "total_tokens": model.config.block_size * (
-                        state["iter_num"] + 1) * micro_batch_size * fabric.world_size}, state["step_count"])
+                    state["iter_num"] + 1) * micro_batch_size * fabric.world_size}, state["step_count"])
             fabric.barrier()
         if not is_accumulating and state["step_count"] % save_step_interval == 0:
             checkpoint_path = out_dir / f"iter-{state['iter_num']:06d}-ckpt-step-{state['step_count']}.pth"
@@ -463,8 +450,9 @@ def create_dataloader(
             mask_attn=mask_attn if split == "train" and mask_attn else "",
             merge_method=merge_method,
             initial_iter=initial_iter,
-            samples_per_step = micro_batch_size * gradient_accumulation_steps, # how many pieces of data is needed for one step
-            total_steps = max_step
+            samples_per_step=micro_batch_size * gradient_accumulation_steps,
+            # how many pieces of data is needed for one step
+            total_steps=max_step
         )
         datasets.append(dataset)
 
