@@ -240,7 +240,6 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
         seed=3407,
         mask_attn=config.intradoc_mask,
         merge_method=config.merge_method,
-        initial_iter=adjust_iter_num(model_name, state["iter_num"])
     )
     if val_dataloader is None:
         train_dataloader = fabric.setup_dataloaders(train_dataloader)
@@ -251,11 +250,6 @@ def main(fabric, train_data_dir, val_data_dir, resume, eval_only, load_from):
     fabric.print(f"Training time: {(time.perf_counter() - train_time):.2f}s")
     if fabric.device.type == "cuda":
         fabric.print(f"Memory used: {torch.cuda.max_memory_allocated() / 1e9:.02f} GB")
-
-
-def adjust_iter_num(model_name, initial_iter):
-    return 0
-
 
 def step_to_window_size(step, min_window_size, max_window_size):
     curr_window_size = min_window_size + step
@@ -307,29 +301,13 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
         go_through_dataloader = False
         fabric.print("go_through_dataloader is False, because the wandb_name contains 'cont'.")
 
-    if 'proweb' not in dataset_name:
-        # only adjust iter_num for non-proweb dataset
-        curr_iter = adjust_iter_num(model_name, initial_iter)
-        print("Current iter adjusted to", curr_iter, "from initial iter", initial_iter, 'because of dataset',
-              dataset_name)
     # fabric.print("curr_iter origins from lower bound of 240000 of initial iter ", initial_iter, "curr_iter", curr_iter,
     #              "max_iters", max_iters)
     fabric.print("curr_iter", curr_iter, "initial_iter", initial_iter, "max_iters", max_iters)
     loss_func = FusedCrossEntropyLoss()
 
-    if "dwd1" in model_name:
-        # find out whether it is dwd
-        factor = 1
-    elif 'dwd2' in model_name:
-        factor = 2
-    elif 'dwd4' in model_name:
-        factor = 4
-    else:
-        factor = -1
-
     if RESET_ROPE:
         model.reset_rope_cache(new_base=rope_update_steps[0])
-
 
     for train_data in train_dataloader:
         # resume loader state. This is not elegant but it works. Should rewrite it in the future.
@@ -368,14 +346,7 @@ def train(fabric, state, train_dataloader, val_dataloader, monitor, resume, eval
                 # print("using fragment_lens and fragment_nums for training.")
                 fragment_lens = train_data["fragment_lens"]
                 fragment_nums = train_data["fragment_nums"]
-                window_size = step_to_window_size(state["step_count"] // factor, 32,
-                                                  model.config.block_size) if factor > 0 else None
-                # print("iter_num", state["iter_num"], "step_count", state["step_count"], "window_size", window_size)
-                logits = model(input_ids, fragment_lens=fragment_lens, fragment_nums=fragment_nums,
-                               window_size=window_size)
-            elif factor > 0:
-                logits = model(input_ids, window_size=step_to_window_size(state["step_count"] // factor, 32,
-                                                                          model.config.block_size))
+                logits = model(input_ids, fragment_lens=fragment_lens, fragment_nums=fragment_nums)
             else:
                 logits = model(input_ids)
             # print('logits', logits.shape, 'targets', targets.shape)
