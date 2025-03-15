@@ -74,8 +74,6 @@ elif '32k' in model_name:
     global_batch_size = global_batch_size // 16
     micro_batch_size = micro_batch_size // 8
 
-if True or gpu_memory == '40960':  # do not change the micro_batch_size
-    micro_batch_size = micro_batch_size // 2
 
 if 'b_tokens' in dataset_name:
     pattern = r'_(\d+b)_tokens'
