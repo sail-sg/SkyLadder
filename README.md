@@ -189,7 +189,7 @@ result = flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=c
                                               max_seqlen_q=max_seqlen,
                                               max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True)
 result = result.reshape(bsize, seqlen, nhead, head_dim)
-                return result
+return result
 ```
 
 
