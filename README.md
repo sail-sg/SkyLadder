@@ -134,8 +134,10 @@ The converted model will be saved in the `SAVE_DIR_OF_MODEL` directory.
 
 ## Key Changes
 The following content describes the key changes we made to the original TinyLlama project.
-It is helpful if you would like to adopt our changes to other pretraining libraries. 
-In fact, we also applied our changes to our fork of the lingua project. 
+It is helpful if you would like to adopt our changes to other pretraining libraries.
+There are mainly two parts that are changed: 
+1. Data loading: Along with the original token ids, the dataset iterator would also output the fragment lengths and the number of fragments. 
+2. Attention calculation in model: The model would use the fragment lengths to calculate the attention mask, using the `flash_attn_varlen_func` function.
 
 #### Calculating fragment lengths
 We use the following snippets to calculate the fragment lengths in the [`lit_gpt/packed_dataset.py`](lit_gpt/packed_dataset.py) file.
