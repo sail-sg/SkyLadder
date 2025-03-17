@@ -34,7 +34,7 @@ pip install -r requirements.txt
 The data preparation process is the same as the original tinyllama project.
 First make sure that your data is in jsonl format in one directory of the following structure:
 ```
-text_dir
+TEXT_DIR
 ├── cc
 │   ├── train
 │   │   ├── 0.jsonl
@@ -52,14 +52,14 @@ Then run the following:
 
 ```bash
 export TEXT_DIR=<YOUR_TEXT_DIR>
-export BINS_ROOT=<YOUR_BIN_DIR>
+export BINS_ROOT=<YOUR_BIN_DIR> # where to store the processed chunks
 bash scripts/pajama_processing.sh cc 8k
 ```
 where `cc` is the dataset name and `8k` is the sequence length (supporting from 512 to 16k). 
 The `TEXT_DIR` is the directory where the text data is stored and the `BIN_DIR` is the directory where the processed data will be stored.
 After this step, you will have the data in the following structure:
 ```
-bin_dir
+BINS_ROOT
 ├── cc_8k
 │   ├── train_0.bin
 │   ├── train_1.bin
