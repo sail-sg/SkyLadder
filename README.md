@@ -111,10 +111,9 @@ To combine with SkyLadder, use suffices like `intradm8` ($\alpha=1/8$), `intradm
 You can also find other types of schedules we experimented with in our paper.
 For instance, `tiny_LLaMA_1b_8k_sin8` means that the schedule is a sinusoidal schedule with $\alpha$ being 1/8. 
 We support linear (`dm8`), sinusoidal (`sin8`), and exponential (`exp8`) schedules. 
-There are two modes we support, based on (1) the rate of increasing the context window or (2) the percentage of training tokens with an increasing context window.
-(1) `{schedule-type}{rate}` where `rate` is $1/\alpha$.
-
-(2) `{schedule-type}{scheduling-percent}p` where `scheduling-percent` is the percentage of training tokens with an increasing context window, "climbing the ladder". For instance, `sin70p` means that 70% of the training tokens will have an increasing context window, following a sinusoidal schedule.
+There are two modes we support, based on (1) the rate of increasing the context window or (2) the percentage of training tokens with an increasing context window. 
+- `{schedule-type}{rate}` where `rate` is $1/\alpha$. For instance, `sin8` means that the context window will increase by 1 every 8 steps.
+-  `{schedule-type}{scheduling-percent}p` where `scheduling-percent` is the percentage of training tokens with an increasing context window, "climbing the ladder". For instance, `sin70p` means that 70% of the training tokens will have an increasing context window, following a sinusoidal schedule.
 
 
 

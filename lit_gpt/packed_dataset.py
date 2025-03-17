@@ -43,7 +43,7 @@ def get_fragment_lens_fixed_length(chunk, fixed_length, is_multiple=True):
         chunk) % fixed_length == 0, "Chunk length must be a multiple of fixed length, but got {} and {}".format(
         len(chunk), fixed_length)
     filtered_indices = np.arange(fixed_length, len(chunk),
-                                 fixed_length) - 1  # -1 was added on Oct 17, before training of intradm models, but the old models are trained with the bug
+                                 fixed_length) - 1 # Subtract 1 to get the last index of each fragment
     # if len(skip_indices) > 0:
     #     print("Skipper indices:", len(skip_indices), "Filtered indices:", len(filtered_indices))
     # # Adjust how fragment lengths are calculated to match the original function
