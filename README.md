@@ -88,7 +88,7 @@ bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intramask cc_8k cc_8k # intradocume
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_dm8 cc_8k cc_8k # skyladder with alpha=1/8 
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intradm8 cc_8k cc_8k # intradocument masking + skyladder with alpha=1/8
 ```
-Here, `dm8` means that $\alpha$ is 1/8. Therefore `dm1` is the fastest and `dm8` is the slowest.
+Here, `dm8` means that $\alpha$ is 1/8: the local window size $w$ will increase by 1 every 8 steps. Therefore, it takes 64k steps to reach 8k. In our implementation, `dm1` is the fastest (8k steps to reach 8k) and `dm8` is the slowest (64k steps to reach 8k).
 
 On a node with 8 A100 (40G) GPUs, the pretraining of a 1B model with 8k context, 100B token takes around 10 days. 
 If you wish to get the results faster, do consider using a smaller model. For instance, the 120M (`tiny_LLaMA_120M_8k`) model takes around 1 day to pretrain with 100B tokens. 
