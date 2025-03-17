@@ -2,7 +2,7 @@
 DATASET_NAME=$1
 PROCESSING_LENGTH=$2
 export SOURCE_PATH=$TEXT_DIR/$DATASET_NAME
-export DEST_PATH=$BIN_DIR/$DATASET_NAME
+export DEST_PATH=$BINS_ROOT/$DATASET_NAME
 
 # if charpercent is not empty, add it to the destination path
 

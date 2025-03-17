@@ -75,7 +75,7 @@ Next, you can start pretraining by running the following:
 ```bash
 export WANDB_API_KEY=<YOUR_WANDB_API_KEY> # if you want to log to wandb
 export BINS_ROOT=<YOUR_BIN_DIR> # from the previous data preparation step
-bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k
+bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k # replace 1b_8k with 120M_8k or 360M_8k for smaller models
 ```
 The general usage of `pretraining.sh` is `bash scripts/pretraining.sh model_config_name train_dataset_name eval_dataset_name`. For instance, 
 `tiny_LLaMA_1b_8k` is the model config name, `cc_8k` is the training dataset name, and `cc_8k` is the evaluation dataset name. 
