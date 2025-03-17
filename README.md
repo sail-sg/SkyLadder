@@ -134,7 +134,7 @@ It is helpful if you would like to adopt our changes to other pretraining librar
 In fact, we also applied our changes to our fork of the lingua project. 
 
 #### Calculating fragment lengths
-We use the following snippets to calculate the fragment lengths in the `lit_gpt/packed_dataset.py` file.
+We use the following snippets to calculate the fragment lengths in the [`lit_gpt/packed_dataset.py`](lit_gpt/packed_dataset.py) file.
 ```python
 def get_fragment_lens_fixed_length(chunk, fixed_length, is_multiple=True):
     assert fixed_length > 0, "Fixed length must be greater than 0, but got {}".format(fixed_length)
@@ -176,15 +176,15 @@ def calculate_mask_length_linear_schedule(self, curr_iter_num):
 The intra-document masking is implemented similarly, and the main change is that the fragment lengths are calculated based on the documents lengths, rather than the fixed length.
 
 #### Attention masking
-We use the following snippets enable masked attention in the `lit_gpt/model.py` file.
+We use the following snippets enable masked attention in the [`lit_gpt/model.py`](lit_gpt/model.py) file.
 ```python
-# original :
+# original causal mask:
 #    return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True)
 # modified:
 bsize, seqlen, nhead, head_dim = q.shape
-q = q.reshape(-1, q.shape[-2], q.shape[-1])
+q = q.reshape(-1, q.shape[-2], q.shape[-1]) # reshaping as required by flash_attn_varlen_func
 k = k.reshape(-1, k.shape[-2], k.shape[-1])
-v = v.reshape(-1, v.shape[-2], v.shape[-1])
+v = v.reshape(-1, v.shape[-2], v.shape[-1]) 
 result = flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=cuseq_lens,
                                               max_seqlen_q=max_seqlen,
                                               max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True)
