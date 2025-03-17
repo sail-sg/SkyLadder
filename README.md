@@ -133,6 +133,64 @@ The following content describes the key changes we made to the original TinyLlam
 It is helpful if you would like to adopt our changes to other pretraining libraries. 
 In fact, we also applied our changes to our fork of the lingua project. 
 
+#### Calculating fragment lengths
+We use the following snippets to calculate the fragment lengths in the `lit_gpt/packed_dataset.py` file.
+```python
+def get_fragment_lens_fixed_length(chunk, fixed_length, is_multiple=True):
+    assert fixed_length > 0, "Fixed length must be greater than 0, but got {}".format(fixed_length)
+    filtered_indices = np.arange(fixed_length, len(chunk),
+                                 fixed_length) - 1 # Subtract 1 to get the last index of each fragment
+    if filtered_indices.size > 0:
+        fragment_lengths = []
+        prev = 0
+        for idx in filtered_indices:
+            fragment_lengths.append(idx - prev + 1)
+            prev = idx + 1
+        if prev < len(chunk):
+            fragment_lengths.append(len(chunk) - prev)
+    else:
+        fragment_lengths = [len(chunk)]  # If no valid indices, the entire chunk is one fragment
+
+    return fragment_lengths, len(fragment_lengths)
+```
+This is called by the dataset iterator when yielding a data point:
+```python
+if self.is_dm_attention == "dm":
+    curr_mask_length = self.calculate_mask_length_with_rounding(self._iter_num, round_to=self.round_to)
+    cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size - 1],
+                                                                          curr_mask_length,
+                                                                                      is_multiple=False)
+return {"idx": arr, "fragment_lens": cur_fragment_lens, "fragment_nums": cur_fragment_nums}
+```
+The `calculate_mask_length_with_rounding` function is the scheduling function.
+For instance, the linear schedule is implemented as follows:
+```python
+def calculate_mask_length_linear_schedule(self, curr_iter_num):
+    if curr_iter_num >= self.changing_point:
+        return self.final_mask_length
+    else:
+        curr_mask_length = self.init_mask_length + int(
+            (self.final_mask_length - self.init_mask_length) * (curr_iter_num / self.changing_point))
+        return curr_mask_length
+```
+The intra-document masking is implemented similarly, and the main change is that the fragment lengths are calculated based on the documents lengths, rather than the fixed length.
+
+#### Attention masking
+We use the following snippets enable masked attention in the `lit_gpt/model.py` file.
+```python
+# original :
+#    return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True)
+# modified:
+bsize, seqlen, nhead, head_dim = q.shape
+q = q.reshape(-1, q.shape[-2], q.shape[-1])
+k = k.reshape(-1, k.shape[-2], k.shape[-1])
+v = v.reshape(-1, v.shape[-2], v.shape[-1])
+result = flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=cuseq_lens,
+                                              max_seqlen_q=max_seqlen,
+                                              max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True)
+result = result.reshape(bsize, seqlen, nhead, head_dim)
+                return result
+```
 
 
 ## Citation
