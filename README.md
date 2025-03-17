@@ -116,8 +116,8 @@ You can also find other types of schedules we experimented with in our paper.
 For instance, `tiny_LLaMA_1b_8k_sin8` means that the schedule is a sinusoidal schedule with $\alpha$ being 1/8. 
 We support linear (`dm8`), sinusoidal (`sin8`), and exponential (`exp8`) schedules. 
 There are two modes we support, based on (1) the rate of increasing the context window or (2) the percentage of training tokens with an increasing context window. 
-- `{schedule-type}{rate}` where `rate` is $1/\alpha$. For instance, `sin8` means that the context window will increase by 1 every 8 steps.
--  `{schedule-type}{scheduling-percent}p` where `scheduling-percent` is the percentage of training tokens with an increasing context window, "climbing the ladder". For instance, `sin70p` means that 70% of the training tokens will have an increasing context window, following a sinusoidal schedule.
+1. `{schedule-type}{rate}` where `rate` is $1/\alpha$. For instance, `sin8` means that the context window will increase by 1 every 8 steps.
+2. `{schedule-type}{scheduling-percent}p` where `scheduling-percent` is the percentage of training tokens with an increasing context window, "climbing the ladder". For instance, `sin70p` means that 70% of the training tokens will have an increasing context window, following a sinusoidal schedule.
 
 
 
@@ -136,7 +136,7 @@ The converted model will be saved in the `SAVE_DIR_OF_MODEL` directory.
 The following content describes the key changes we made to the original TinyLlama project.
 It is helpful if you would like to adopt our changes to other pretraining libraries.
 There are mainly two parts that are changed: 
-1. Data loading: Along with the original token ids, the dataset iterator would also output the fragment lengths and the number of fragments. 
+1. Data loading: Along with the original token ids, the dataset iterator would also output the fragment lengths and the number of fragments. Attention is calculated within each fragment, and not across fragments. 
 2. Attention calculation in model: The model would use the fragment lengths to calculate the attention mask, using the `flash_attn_varlen_func` function.
 
 #### Calculating fragment lengths
@@ -165,7 +165,7 @@ if self.is_dm_attention == "dm":
     curr_mask_length = self.calculate_mask_length_with_rounding(self._iter_num, round_to=self.round_to)
     cur_fragment_lens, cur_fragment_nums = get_fragment_lens_fixed_length(arr[:self._block_size - 1],
                                                                           curr_mask_length,
-                                                                                      is_multiple=False)
+                                                                          is_multiple=False)
 return {"idx": arr, "fragment_lens": cur_fragment_lens, "fragment_nums": cur_fragment_nums}
 ```
 The `calculate_mask_length_with_rounding` function is the scheduling function.
