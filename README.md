@@ -90,6 +90,10 @@ bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intradm8 cc_8k cc_8k # intradocumen
 ```
 Here, `dm8` means that $\alpha$ is 1/8. Therefore `dm1` is the fastest and `dm8` is the slowest.
 
+On a node with 8 A100 (40G) GPUs, the pretraining of a 1B model with 8k context, 100B token takes around 10 days. 
+If you wish to get the results faster, do consider using a smaller model. For instance, the 120M (`tiny_LLaMA_120M_8k`) model takes around 1 day to pretrain with 100B tokens. 
+Additional pretraining setups (learning rate, batch size, max steps, etc.) should be changed in the [`pretrain/tinyllama.py`](pretrain/tinyllama.py) file.
+
 ### Advanced Usage
 
 #### Multi-node Pretraining
