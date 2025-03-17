@@ -46,7 +46,7 @@ TEXT_DIR
 │       └── ...
 └── ...
 ```
-You can download the 30B corpus of [CommonCrawl]() (from SlimPajama), and the high-quality [FineWeb-pro](https://huggingface.co/datasets/gair-prox/FineWeb-pro) dataset.
+You can download the 30B corpus of [CommonCrawl](https://huggingface.co/datasets/tyzhu/cc_subset) (from SlimPajama), and the high-quality [FineWeb-pro](https://huggingface.co/datasets/gair-prox/FineWeb-pro) dataset.
 
 Then run the following:
 
@@ -107,24 +107,31 @@ We implemented intra-document masking (which can be combined with SkyLadder).
 The model name of `tiny_LLaMA_1b_8k_intramask` means that the model will be trained with intra-document masking. 
 To combine with SkyLadder, use suffices like `intradm8` ($\alpha=1/8$), `intradm4`, etc.
 
-
 #### Other types of schedules 
 You can also find other types of schedules we experimented with in our paper.
 For instance, `tiny_LLaMA_1b_8k_sin8` means that the schedule is a sinusoidal schedule with $\alpha$ being 1/8. 
 We support linear (`dm8`), sinusoidal (`sin8`), and exponential (`exp8`) schedules. 
+There are two modes we support, based on (1) the rate of increasing the context window or (2) the percentage of training tokens with an increasing context window.
+(1) `{schedule-type}{rate}` where `rate` is $1/\alpha$.
+
+(2) `{schedule-type}{scheduling-percent}p` where `scheduling-percent` is the percentage of training tokens with an increasing context window, "climbing the ladder". For instance, `sin70p` means that 70% of the training tokens will have an increasing context window, following a sinusoidal schedule.
+
+
 
 #### Convert to HF
 You can convert the model to Huggingface format by running the following:
 ```bash
-export MODEL_DIR=<YOUR_MODEL_DIR>
-export MODEL_NAME=<YOUR_MODEL_NAME>
-bash scripts/convert_to_hf.sh $MODEL_DIR $MODEL_NAME
+bash scripts/convert_to_hf.sh <SAVE_DIR_OF_MODEL> <CHECKPOINT_FILENAME>
+# Sample usage
+bash scripts/convert_to_hf.sh out/tiny_LLaMA_120M_8k_exp8_cc_8k iter-120000-ckpt-step-30000.pth
 ```
-where `MODEL_DIR` is the directory where the model is stored and `MODEL_NAME` is the name of the model.
+where `SAVE_DIR_OF_MODEL` is the directory where the litgpt model is saved and `CHECKPOINT_FILENAME` is the checkpoint file to be converted.
+The converted model will be saved in the `SAVE_DIR_OF_MODEL` directory.
+
 
 ## Key Changes
 The following content describes the key changes we made to the original TinyLlama project.
-It would be helpful if you would like to adopt our changes to other pretraining libraries. 
+It is helpful if you would like to adopt our changes to other pretraining libraries. 
 In fact, we also applied our changes to our fork of the lingua project. 
 
 
@@ -136,5 +143,5 @@ If you find our paper or this code useful, we would appreciate it if you could c
 ```
 
 ## Acknowledgement
-We would like to thank the authors of the original [TinyLLaMA](https://github.com/jzhang38/TinyLlama) project for their work. 
+We would like to thank the authors of the original [TinyLLaMA](https://github.com/jzhang38/TinyLlama) project for their work, so that we can build on top of it.
 The ladder icon in the title is made by [Freepik](https://www.flaticon.com/authors/freepik) from [www.flaticon.com](https://www.flaticon.com/).. 
