@@ -30,6 +30,7 @@ Here, we expect a CUDA version of 11.8
 conda create -n ladder-pretrain python=3.8
 conda activate ladder-pretrain
 # install the latest compatible version of torch and xformers, this should install torch 2.4.1
+pip install ninja
 pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu118 
 # install flash attention
 git clone --branch v2.3.3 --depth 1 https://github.com/Dao-AILab/flash-attention.git
