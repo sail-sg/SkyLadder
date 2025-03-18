@@ -23,10 +23,23 @@ speeds compared to baselines
 This project is based on the [TinyLlama](https://github.com/jzhang38/TinyLlama) project. It has been adapted to support pretraining with context window scheduling, intra-document masking, etc.
 
 ###  Installation
-Please follow the instructions in the original [TinyLlama](https://github.com/jzhang38/TinyLlama) project.
-```python
+If you already an environment built for [TinyLlama](https://github.com/jzhang38/TinyLlama/PRETRAIN.md), you can directly use it. 
+Otherwise, please use the following commands to build a new environment. 
+Here, we expect a CUDA version of 11.8
+```bash
 conda create -n ladder-pretrain python=3.8
 conda activate ladder-pretrain
+# install the latest compatible version of torch and xformers, this should install torch 2.4.1
+pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu118 
+# install flash attention
+git clone --branch v2.3.3 --depth 1 https://github.com/Dao-AILab/flash-attention.git
+cd flash-attention
+python setup.py install
+cd csrc/rotary && pip install .
+cd ../layer_norm && pip install .
+cd ../xentropy && pip install .
+cd ../.. && rm -rf flash-attention
+# install other dependencies 
 pip install -r requirements.txt
 ```
 
