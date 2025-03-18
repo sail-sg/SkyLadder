@@ -23,7 +23,7 @@ speeds compared to baselines
 This project is based on the [TinyLlama](https://github.com/jzhang38/TinyLlama) project. It has been adapted to support pretraining with context window scheduling, intra-document masking, etc.
 
 ###  Installation
-If you already an environment built for [TinyLlama](https://github.com/jzhang38/TinyLlama/PRETRAIN.md), you can directly use it. 
+If you already an environment built for [TinyLlama](https://github.com/jzhang38/TinyLlama/blob/main/PRETRAIN.md), you can directly use it. 
 Otherwise, please use the following commands to build a new environment. 
 Here, we expect a CUDA version of 11.8
 ```bash
@@ -43,6 +43,7 @@ cd ../.. && rm -rf flash-attention
 # install other dependencies 
 pip install -r requirements.txt
 ```
+If you wish to use Docker, you could follow the instruction [here](https://github.com/sail-sg/regmix/tree/main/model_training) for the docker image name `siviltaramqian/tinyllama:latest`
 
 ### Data preparation
 The data preparation process is the same as the original tinyllama project.
