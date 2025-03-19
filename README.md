@@ -1,4 +1,4 @@
-# SkyLadder<img src="assets/ladder.png" alt="ladder" style="width:1em; vertical-align:middle;">: Better and Faster Pretraining via Context Window Scheduling
+# <img src="assets/ladder.png" alt="ladder" style="width:1em; vertical-align:middle;">SkyLadder: Better and Faster Pretraining via Context Window Scheduling
 
 
 
