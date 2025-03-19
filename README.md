@@ -198,19 +198,30 @@ The intra-document masking is implemented similarly, and the main change is that
 
 #### Attention masking
 We use the following snippets enable masked attention in the [`lit_gpt/model.py`](lit_gpt/model.py) file.
-```python
-# original causal mask:
-#    return flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True)
-# modified:
-bsize, seqlen, nhead, head_dim = q.shape
-q = q.reshape(-1, q.shape[-2], q.shape[-1]) # reshaping as required by flash_attn_varlen_func
-k = k.reshape(-1, k.shape[-2], k.shape[-1])
-v = v.reshape(-1, v.shape[-2], v.shape[-1]) 
-result = flash_attn_varlen_func(q, k, v, cu_seqlens_q=cuseq_lens, cu_seqlens_k=cuseq_lens,
-                                              max_seqlen_q=max_seqlen,
-                                              max_seqlen_k=max_seqlen, dropout_p=0.0, softmax_scale=scale, causal=True)
-result = result.reshape(bsize, seqlen, nhead, head_dim)
-return result
+
+```diff
+- from flash_attn import flash_attn_func
+- result = flash_attn_func(
+-     q, k, v, dropout_p=0.0, softmax_scale=scale, causal=True
+- )
+
++ from flash_attn import flash_attn_varlen_func
++ q = q.reshape(-1, q.shape[-2], q.shape[-1])
++ k = k.reshape(-1, k.shape[-2], k.shape[-1])
++ v = v.reshape(-1, v.shape[-2], v.shape[-1])
++ 
++ result = flash_attn_varlen_func(
++     q, k, v,
++     cu_seqlens_q=cuseq_lens,
++     cu_seqlens_k=cuseq_lens,
++     max_seqlen_q=max_seqlen,
++     max_seqlen_k=max_seqlen,
++     dropout_p=0.0,
++     softmax_scale=scale,
++     causal=True
++ )
++ 
++ result = result.reshape(bsize, seqlen, nhead, head_dim)
 ```
 
 
