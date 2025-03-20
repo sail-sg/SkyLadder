@@ -1,5 +1,7 @@
 # <img src="assets/ladder.png" alt="ladder" style="width:1em; vertical-align:middle;">SkyLadder: Better and Faster Pretraining via Context Window Scheduling
 
+[![Paper](https://img.shields.io/badge/Read-Paper-blue?style=for-the-badge&logo=googlescholar)](https://arxiv.org/abs/2503.15450)
+[![Slides](https://img.shields.io/badge/View-Slides-green?style=for-the-badge&logo=googlemeet)](https://docs.google.com/presentation/d/1Uot7hQRRBAxFsppVDUpMEMpw_H6bcruNIf3eMmdFqeY/edit?usp=sharing)
 
 
 ## Introduction
