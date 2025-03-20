@@ -17,7 +17,11 @@ we pre-train 1B-parameter models (up to 32K context) and 3B-parameter models
 of up to 3.7% on common benchmarks, while achieving up to 22% faster training
 speeds compared to baselines
 
-![1b-8k-proweb.png](assets%2F1b-8k-proweb.png)
+<p align="center">
+  <img src="assets/1b-8k-proweb.png" alt="training loss" width="45%">
+  <img src="assets/schedule_illustration_v2.png" alt="illustration" width="45%">
+</p>
+
 ## Quick Start 
 
 This project is based on the [TinyLlama](https://github.com/jzhang38/TinyLlama) project. It has been adapted to support pretraining with context window scheduling, intra-document masking, etc.
@@ -98,7 +102,7 @@ The script will look for bins created in the previous step. Those with a `train_
 
 You can simply replace the model config name to get different models:
 ```
-bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k
+bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k # baseline with stsandard causal attention
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intramask cc_8k cc_8k # intradocument masking
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_dm8 cc_8k cc_8k # skyladder with alpha=1/8 
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intradm8 cc_8k cc_8k # intradocument masking + skyladder with alpha=1/8
