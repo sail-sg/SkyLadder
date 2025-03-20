@@ -94,7 +94,7 @@ BINS_ROOT
 ### Pretraining
 Next, you can start pretraining by running the following:
 ```bash
-export WANDB_API_KEY=<YOUR_WANDB_API_KEY> # if you want to log to wandb
+export WANDB_API_KEY=<YOUR_WANDB_API_KEY> # if you want to log into wandb
 export BINS_ROOT=<YOUR_BIN_DIR> # from the previous data preparation step
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k # replace 1b_8k with 120M_8k or 360M_8k for smaller models
 ```
@@ -104,7 +104,7 @@ The script will look for bins created in the previous step. Those with a `train_
 
 You can simply replace the model config name to get different models:
 ```
-bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k # baseline with stsandard causal attention
+bash scripts/pretraining.sh tiny_LLaMA_1b_8k cc_8k cc_8k # baseline with standard causal attention
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intramask cc_8k cc_8k # intradocument masking
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_dm8 cc_8k cc_8k # skyladder with alpha=1/8 
 bash scripts/pretraining.sh tiny_LLaMA_1b_8k_intradm8 cc_8k cc_8k # intradocument masking + skyladder with alpha=1/8
@@ -120,7 +120,7 @@ Additional pretraining setups (learning rate, batch size, max steps, etc.) shoul
 #### Multi-node Pretraining
 Alternatively, if you are running on multiple nodes, you can use the following command:
 ```bash
-export WANDB_API_KEY=<YOUR_WANDB_API_KEY> # if you want to log to wandb
+export WANDB_API_KEY=<YOUR_WANDB_API_KEY> # if you want to log into wandb
 export BINS_ROOT=<YOUR_BIN_DIR> # from the previous data preparation step
 export NUM_NODES=4 # number of nodes, adjust accordingly
 bash scripts/pretraining_multi.sh tiny_LLaMA_1b_8k cc_8k cc_8k
