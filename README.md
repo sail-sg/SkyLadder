@@ -18,7 +18,7 @@ of up to 3.7% on common benchmarks, while achieving up to 22% faster training
 speeds compared to baselines
 
 <p align="center">
-  <img src="assets/1b-8k-proweb.png" alt="training loss" width="45%">
+  <img src="assets/1b-8k-proweb.png" alt="training loss" width="50%">
   <img src="assets/schedule_illustration_v2.png" alt="illustration" width="45%">
 </p>
 
