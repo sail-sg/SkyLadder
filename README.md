@@ -228,7 +228,15 @@ We use the following snippets enable masked attention in the [`lit_gpt/model.py`
 ## Citation
 If you find our paper or this code useful, we would appreciate it if you could cite our work: 
 ```
-
+@misc{zhu2025skyladderbetterfasterpretraining,
+      title={SkyLadder: Better and Faster Pretraining via Context Window Scheduling}, 
+      author={Tongyao Zhu and Qian Liu and Haonan Wang and Shiqi Chen and Xiangming Gu and Tianyu Pang and Min-Yen Kan},
+      year={2025},
+      eprint={2503.15450},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2503.15450}, 
+}
 ```
 
 ## Acknowledgement
