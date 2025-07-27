@@ -240,7 +240,7 @@ class PackedDatasetIterator:
         self._mask_attn = mask_attn
         self._samples_per_step = samples_per_step
         assert self._mask_attn in ["strict", "",
-                                   "sc4"] + ALL_ATTENTION_SUFFIX, "Mask attn must be valid, but got {}".format(
+                                   "sc4", "sc5"] + ALL_ATTENTION_SUFFIX, "Mask attn must be valid, but got {}".format(
             self._mask_attn)
         self._load_n_chunks()
 
@@ -268,6 +268,10 @@ class PackedDatasetIterator:
         if self._mask_attn == "sc4":
             self.init_mask_length = 4096
             self.changing_point = self._samples_per_step * 97500  # after 97500 steps, the mask length will be final length
+        elif self._mask_attn == "sc5":
+            self.is_dm_attention = "dm"
+            self.get_curr_iter_length = self.calculate_mask_length_sc5_schedule
+            self.init_mask_length = 4096
 
         prefix_to_schedule_mapping = {
             'sin': self.calculate_mask_length_sin_schedule,
@@ -417,6 +421,17 @@ class PackedDatasetIterator:
             linear_curr_mask_length = self.calculate_linear_schedule(curr_iter_num)
             curr_mask_length = self.final_mask_length + self.init_mask_length - linear_curr_mask_length
             return curr_mask_length
+
+    def calculate_mask_length_sc5_schedule(self, curr_iter_num):
+        step_num = curr_iter_num//self._samples_per_step
+        if step_num < 95000:
+            return 4096
+        elif step_num >= 95000 and step_num < 96000:
+            return 8192
+        elif step_num >= 96000 and step_num < 98000:
+            return 16384
+        elif step_num >= 98000:
+            return self.final_mask_length
 
     def calculate_linear_schedule(self, curr_iter_num):
         curr_mask_length = self.init_mask_length + (curr_iter_num // self.iters_per_increase)
