@@ -46,6 +46,10 @@ def prepare_full(
             f"No files matching {slimpajama_sets[split]} found at {source_path}. \n"
             "Make sure you download the data..."
         )
+    print(f"tokenizer.bos_id={tokenizer.bos_id}")
+    if tokenizer.bos_id is None:
+        print(f"tokenizer.bos_id is None, using tokenizer.eos_id={tokenizer.eos_id}")
+        tokenizer.bos_id = tokenizer.eos_id
 
     builder = packed_dataset.PackedDatasetBuilder(
         outdir=destination_path,

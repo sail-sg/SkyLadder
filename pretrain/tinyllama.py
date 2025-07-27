@@ -31,8 +31,55 @@ out_dir = Path("out") / name
 num_of_devices = 8
 global_batch_size = 512
 learning_rate = 4e-4
-micro_batch_size = 8
-max_step = 715256 * 2
+
+if "120M" in model_name:
+    micro_batch_size = 32
+elif '0.5b' in model_name:
+    micro_batch_size = 8
+elif '1b' in model_name:
+    micro_batch_size = 16
+elif '360M' in model_name:
+    micro_batch_size = 32
+elif '7b' in model_name:
+    micro_batch_size = 8
+elif '3b' in model_name:
+    micro_batch_size = 8
+else:
+    raise ValueError("Invalid model name")
+if '512' in model_name:
+    micro_batch_size = micro_batch_size * 4  # 1k tokens
+    global_batch_size = global_batch_size * 4
+elif '1k' in model_name:
+    micro_batch_size = micro_batch_size * 2  # 1k tokens
+    global_batch_size = global_batch_size * 2
+elif '4k' in model_name:
+    micro_batch_size = micro_batch_size // 2  # 4k tokens
+    global_batch_size = global_batch_size // 2
+elif '8k' in model_name:
+    micro_batch_size = micro_batch_size // 4  # 8k tokens
+    global_batch_size = global_batch_size // 4
+elif '16k' in model_name:
+    micro_batch_size = micro_batch_size // 8  # 8k tokens
+    global_batch_size = global_batch_size // 8
+elif '32k' in model_name:
+    global_batch_size = global_batch_size // 16
+    micro_batch_size = micro_batch_size // 8
+
+# if GPU memory < 50GB, divide by 2
+# if int(gpu_memory) < 50:
+#     print(f"GPU memory is less than 50GB, dividing micro_batch_size by 2")
+# micro_batch_size = micro_batch_size // 2
+
+if 'b_tokens' in dataset_name:
+    pattern = r'_(\d+b)_tokens'
+    tokens = int(re.search(pattern, dataset_name).group(1).replace('b', ''))  # parse the number of tokens
+    max_step = tokens * 1000
+    print(f"Found preset number of tokens from {dataset_name}, which is {tokens}, setting max_step to {tokens * 1000}")
+elif "cc" in dataset_name or 'proweb' in dataset_name or 'fineweb' in dataset_name or 'code' in dataset_name:
+    max_step = 100000  # 100B tokens
+else:
+    raise ValueError("Invalid dataset name")
+
 warmup_steps = 2000
 log_step_interval = 10
 eval_iters = 100
