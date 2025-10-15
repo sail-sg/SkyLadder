@@ -3,6 +3,8 @@
 [![Paper](https://img.shields.io/badge/Read-Paper-blue?style=for-the-badge&logo=googlescholar)](https://arxiv.org/abs/2503.15450)
 [![Slides](https://img.shields.io/badge/View-Slides-green?style=for-the-badge&logo=googlemeet)](https://docs.google.com/presentation/d/1Uot7hQRRBAxFsppVDUpMEMpw_H6bcruNIf3eMmdFqeY/edit?usp=sharing)
 
+## Updates
+🔥🔥 SkyLadder is accepted to **NeurIPS 2025**! See you in San Diego!
 
 ## Introduction
 Recent advancements in LLM pretraining have featured ever-expanding context
